@@ -1,0 +1,6 @@
+@aoristo_aqualina_app_HostAddress = http://localhost:5152
+
+GET {{aoristo_aqualina_app_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
