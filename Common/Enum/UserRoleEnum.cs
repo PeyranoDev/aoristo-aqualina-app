@@ -6,12 +6,10 @@ using System.Threading.Tasks;
 
 namespace Common.Enum
 {
-    public enum VehicleRequestStatusEnum
+    public enum UserRoleEnum
     {
-        Pending,      
-        InPreparation, 
-        Ready,         
-        Cancelled,
-        Completed      
+        Admin, 
+        Security,
+        User,
     }
 }

@@ -9,18 +9,18 @@ namespace Data.Entities
 {
     public class VehicleRequest
     {
-        public Guid Id { get; set; }
+        public int Id { get; set; }
 
-        // Foreign key
-        public Guid VehicleId { get; set; }
+        public int VehicleId { get; set; }
 
-        // Relación
         public Vehicle Vehicle { get; set; }
 
-        // Estado de la solicitud
         public VehicleRequestStatusEnum Status { get; set; } 
 
         public DateTime RequestedAt { get; set; }
         public DateTime? CompletedAt { get; set; }
+
+        public int RequestedById { get; set; }
+        public User RequestedBy { get; set; }
     }
 }

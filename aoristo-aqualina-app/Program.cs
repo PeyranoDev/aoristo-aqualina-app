@@ -1,8 +1,12 @@
 using Data;
+using Data.Repositories.Implementations;
+using Data.Repositories.Interfaces;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
+using Services.Main.Implementations;
+using Services.Main.Interfaces;
 using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -35,6 +39,13 @@ builder.Services.AddSwaggerGen(setupAction =>
 });
 
 builder.Services.AddDbContext<AqualinaAPIContext>(dbContextOptions => dbContextOptions.UseSqlite(builder.Configuration["ConnectionStrings:AqualinaAPIDBConnectionString"]));
+
+builder.Services.AddScoped<IUserContextService, UserContextService>();
+builder.Services.AddHttpContextAccessor();
+
+builder.Services.AddScoped<IUserService, UserService>();
+builder.Services.AddScoped<IUserRepository, UserRepository>();
+builder.Services.AddSingleton<IHashingService, HashingService>();
 
 builder.Services
     .AddHttpContextAccessor()

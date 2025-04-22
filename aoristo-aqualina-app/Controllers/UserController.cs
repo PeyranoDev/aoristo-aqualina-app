@@ -1,53 +1,46 @@
 ﻿using Common.Models;
+using Data.Entities;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.IdentityModel.Tokens;
+using Services.Main.Interfaces;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
 
 namespace aoristo_aqualina_app.Controllers
 {
-    [Route("api/user")]
+    [Route("user")]
     [ApiController]
     public class UserController : ControllerBase
     {
-        private readonly IConfiguration _config;
+        private readonly IUserService _userService;
+        private readonly IUserContextService _userContextService;
 
-        public UserController(IConfiguration config)
+        public UserController(IUserService userService, IUserContextService userContextService)
         {
-            _config = config;
+            _userService = userService;
+            _userContextService = userContextService;
         }
 
-        [HttpPost("auth")]
-        public IActionResult Auth([FromBody] CreedentialsDTO dto)
+        [HttpPut]
+        [Authorize(Roles = "Admin, User, Security")]
+        public IActionResult UpdateUser([FromBody] UserForUpdateDTO dto)
         {
-            User? user = _userService.Validate(dto);
-
-            if (user is null)
+            var userId = _userContextService.GetUserId();
+            try
             {
-                return Forbid();
+                var updatedUser = _userService.UpdateUser(dto, userId);
+                if (updatedUser == null)
+                {
+                    return NotFound("User not found.");
+                }
+                return Ok();
             }
-
-            var claims = new List<Claim>
+            catch (Exception ex)
             {
-                new Claim("sub", user.Id.ToString()),
-                new Claim("username", user.Username),
-                new Claim("full name", $"{user.Name}, {user.Surname}"),
-                new Claim(ClaimTypes.Role, user.Role.ToString())
-            };
-
-            var securityKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_config["Jwt:Key"]));
-            var credentials = new SigningCredentials(securityKey, SecurityAlgorithms.HmacSha256Signature);
-            var tokenDescriptor = new JwtSecurityToken(
-                issuer: _config["Jwt:Issuer"],
-                audience: _config["Jwt:Audience"],
-                claims: claims,
-                expires: DateTime.Now.AddDays(30),
-                signingCredentials: credentials);
-
-            var jwt = new JwtSecurityTokenHandler().WriteToken(tokenDescriptor);
-
-            return Ok(new { AccessToken = jwt });
+                return StatusCode(500, $"Internal server error: {ex.Message}");
+            }
         }
     }
 }

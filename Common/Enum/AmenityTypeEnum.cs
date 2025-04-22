@@ -6,12 +6,10 @@ using System.Threading.Tasks;
 
 namespace Common.Enum
 {
-    public enum VehicleRequestStatusEnum
+    public enum AmenityTypeEnum
     {
-        Pending,      
-        InPreparation, 
-        Ready,         
-        Cancelled,
-        Completed      
+        Sauna,
+        HidroMasajes,
+        SUM,
     }
 }

@@ -11,14 +11,15 @@ namespace Data.Entities
     {
         public int Id { get; set; }
         public required EmailAddressAttribute Email { get; set; }
+        public required string Username { get; set; }
         public required string Name { get; set; }
         public required string Surname { get; set; }
         public required string PasswordHash { get; set; }
-        public UserRoleEnum Role { get; set; }
+        public Role Role { get; set; }
         public required bool IsActive { get; set; }
         public required PhoneAttribute Phone { get; set; }
+        public Apartment Apartment { get; set; }
         public ICollection<Reservation>? Reservations { get; set; }
-        public ICollection<UserCar>? OwnedCars { get; set; }
-        public ICollection<UserCar>? SharedCars { get; set; }
+        public ICollection<Vehicle>? OwnedCars { get; set; }
     }
 }
