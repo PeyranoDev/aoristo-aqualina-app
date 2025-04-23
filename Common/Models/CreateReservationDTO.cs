@@ -10,9 +10,8 @@ namespace Common.Models
     public class CreateReservationDTO
     {
         public string Amenity { get; set; }
+        public DateOnly Reservation_Date { get; set; }
+        public TimeOnly Start_Time { get; set; }
+        public TimeOnly End_Time { get; set; }
     }
 }
-amenity: string;
-reservation_date: string;
-start_time: string;
-end_time: string;
