@@ -25,5 +25,10 @@ namespace Services.Main.Implementations
             User? user = _userRepo.Validate(dto.Username, _hashingService.HashPassword(dto.Password));
             return user;
         }
+
+        public User? UpdateUser(UserForUpdateDTO dto, int userid) 
+        { 
+            _userRepo.Update(userid, dto);
+        }
     }
 }

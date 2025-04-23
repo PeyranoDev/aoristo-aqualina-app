@@ -15,7 +15,7 @@ namespace Data
         public AqualinaAPIContext(DbContextOptions<AqualinaAPIContext> options) : base(options)
         {
         }
-        public DbSet<Car> Cars { get; set; }
+        public DbSet<Vehicle> Vehicles { get; set; }
         public DbSet<Reservation> Reservations { get; set; }
         public DbSet<User> Users { get; set; }
         protected override void OnModelCreating(ModelBuilder modelBuilder)
