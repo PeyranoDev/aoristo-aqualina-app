@@ -13,5 +13,6 @@ namespace Data.Repositories.Interfaces
         Task<bool> UsernameExistsAsync(string username);
         Task<User> CreateAsync(User user);
         Task<int> DeleteAsync(User user);
+        IQueryable<User> GetQueryable();
     }
 }

@@ -1,5 +1,8 @@
 ﻿using AutoMapper;
+using Common.Helpers;
 using Common.Models;
+using Common.Models.Requests;
+using Common.Models.Responses.Common.Models.Responses;
 using Data.Entities;
 using Data.Repositories.Interfaces;
 using Microsoft.EntityFrameworkCore;
@@ -68,6 +71,28 @@ namespace Services.Main.Implementations
                 throw new KeyNotFoundException("No se encontró el usuario.");
 
             return await _userRepo.DeleteAsync(user);
+        }
+        public async Task<PagedResponse<UserForResponse>> GetUsersPagedAsync(
+            UserFilterParams filters,
+            PaginationParams pagination)
+        {
+            var query = _userRepo.GetQueryable()
+                .ApplyFilters(filters)
+                .ApplySorting(pagination.SortBy, pagination.SortOrder);
+
+            var totalRecords = await query.CountAsync();
+
+            var users = await query
+                .Skip((pagination.PageNumber - 1) * pagination.PageSize)
+                .Take(pagination.PageSize)
+                .ToListAsync();
+
+            return new PagedResponse<UserForResponse>(
+                _mapper.Map<List<UserForResponse>>(users),
+                totalRecords,
+                pagination.PageNumber,
+                pagination.PageSize
+            );        
         }
     }
 }
