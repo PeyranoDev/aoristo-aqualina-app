@@ -15,8 +15,11 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Services", "Services\Servic
 	EndProjectSection
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Common", "Common\Common.csproj", "{3C970A89-462C-4825-82E5-519B6555A698}"
+	ProjectSection(ProjectDependencies) = postProject
+		{B2F1BC3E-CAE7-4A46-ADA3-FA7230E5A6B9} = {B2F1BC3E-CAE7-4A46-ADA3-FA7230E5A6B9}
+	EndProjectSection
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Data", "Data\Data.csproj", "{B2F1BC3E-CAE7-4A46-ADA3-FA7230E5A6B9}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Data", "Data\Data.csproj", "{B2F1BC3E-CAE7-4A46-ADA3-FA7230E5A6B9}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

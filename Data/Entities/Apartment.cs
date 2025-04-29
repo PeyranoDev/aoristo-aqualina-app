@@ -10,6 +10,7 @@ namespace Data.Entities
     {
         public int Id { get; set; }
         public ICollection<User> Users { get; set; }
+        public bool IsActive { get; set; }
 
     }
 }

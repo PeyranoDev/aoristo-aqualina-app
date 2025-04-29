@@ -18,7 +18,7 @@ namespace Data
         public DbSet<Vehicle> Vehicles { get; set; }
         public DbSet<Reservation> Reservations { get; set; }
         public DbSet<User> Users { get; set; }
-        public DbSet<Apartment> apartments { get; set; }
+        public DbSet<Apartment> Apartments { get; set; }
         public DbSet<Amenity> Amenities { get; set; }
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {

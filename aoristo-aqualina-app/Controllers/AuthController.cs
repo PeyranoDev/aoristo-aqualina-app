@@ -1,4 +1,4 @@
-﻿using Common.Models;
+﻿using Common.Models.Requests;
 using Data.Entities;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.IdentityModel.Tokens;
