@@ -1,5 +1,7 @@
 ﻿using AutoMapper;
 using Common.Models;
+using Common.Models.Requests;
+using Common.Models.Responses.Common.Models.Responses;
 using Data.Entities;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -127,6 +129,13 @@ namespace aoristo_aqualina_app.Controllers
             {
                 return StatusCode(500, $"Internal server error: {ex.Message}");
             }
+        }
+        [HttpGet]
+        [Authorize(Roles = "Admin")]
+        public async Task<ActionResult<PagedResponse<UserForResponse>>> GetUsers([FromQuery] PaginationParams pagination,[FromQuery] UserFilterParams filters)
+        {
+            var response = await _userService.GetUsersPagedAsync(filters, pagination);
+            return Ok(response);
         }
     }
 }

@@ -64,5 +64,12 @@ namespace Data.Repositories.Implementations
             _context.Users.Remove(user);
             return await _context.SaveChangesAsync();
         }
+        public IQueryable<User> GetQueryable()
+        {
+            return _context.Users
+                .Include(u => u.Role)
+                .Include(u => u.Apartment)
+                .AsQueryable();
+        }
     }
 }
