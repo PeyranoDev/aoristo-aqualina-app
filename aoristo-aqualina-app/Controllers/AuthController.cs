@@ -23,9 +23,9 @@ namespace aoristo_aqualina_app.Controllers
         }
 
         [HttpPost("auth")]
-        public IActionResult Auth([FromBody] CreedentialsDTO dto)
+        public async Task<IActionResult> Auth([FromBody] CreedentialsDTO dto)
         {
-            User? user = _userService.Validate(dto);
+            User? user = await _userService.ValidateAsync(dto);
 
             if (user is null)
             {
