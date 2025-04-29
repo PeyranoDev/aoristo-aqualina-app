@@ -12,5 +12,6 @@ namespace Data.Repositories.Interfaces
         Task<bool> EmailExistsAsync(string email);
         Task<bool> UsernameExistsAsync(string username);
         Task<User> CreateAsync(User user);
+        Task<int> DeleteAsync(User user);
     }
 }

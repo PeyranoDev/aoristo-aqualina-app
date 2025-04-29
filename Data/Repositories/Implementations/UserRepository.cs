@@ -59,5 +59,10 @@ namespace Data.Repositories.Implementations
             await _context.SaveChangesAsync();
             return user;
         }
+        public async Task<int> DeleteAsync(User user)
+        {
+            _context.Users.Remove(user);
+            return await _context.SaveChangesAsync();
+        }
     }
 }

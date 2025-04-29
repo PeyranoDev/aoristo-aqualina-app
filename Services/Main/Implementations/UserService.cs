@@ -2,6 +2,7 @@
 using Common.Models;
 using Data.Entities;
 using Data.Repositories.Interfaces;
+using Microsoft.EntityFrameworkCore;
 using Services.Main.Interfaces;
 using System.ComponentModel.DataAnnotations;
 using System.Threading.Tasks;
@@ -13,7 +14,7 @@ namespace Services.Main.Implementations
         private readonly IUserRepository _userRepo;
         private readonly IHashingService _hashingService;
         private readonly IMapper _mapper;
-        private readonly IApartmentRepository _apartmentRepo; 
+        private readonly IApartmentRepository _apartmentRepo;
 
         public UserService(
             IUserRepository userRepo,
@@ -53,6 +54,20 @@ namespace Services.Main.Implementations
             }
 
             return await _userRepo.UpdateAsync(existingUser);
+        }
+
+        public async Task<User?> GetByIdAsync(int id)
+        {
+            return await _userRepo.GetByIdAsync(id);
+        }
+
+        public async Task<int> DeleteUserAsync(int id)
+        {
+            var user = await _userRepo.GetByIdAsync(id);
+            if (user == null)
+                throw new KeyNotFoundException("No se encontró el usuario.");
+
+            return await _userRepo.DeleteAsync(user);
         }
     }
 }

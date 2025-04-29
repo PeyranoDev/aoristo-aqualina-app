@@ -7,5 +7,7 @@ namespace Services.Main.Interfaces
     {
         Task<User?> ValidateAsync(CreedentialsDTO dto);
         Task<User?> UpdateUserAsync(UserForUpdateDTO dto, int userId);
+        Task<User?> GetByIdAsync(int id);
+        Task<int> DeleteUserAsync(int id);
     }
 }
