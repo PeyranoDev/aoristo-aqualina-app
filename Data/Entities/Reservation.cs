@@ -11,10 +11,10 @@ namespace Data.Entities
     {
         public int id { get; set; }
         public Amenity Amenity { get; set; }
-        public DateTime Reservation_Date { get; set; }
-        public TimeOnly Start_Time { get; set; }
-        public TimeOnly End_Time { get; set; }
+        public DateTime ReservationDate { get; set; }
+        public TimeOnly StartTime { get; set; }
+        public TimeOnly EndTime { get; set; }
         public ReservationStatusEnum Status { get; set; }
-        public DateTime Created_At { get; set; }
+        public DateTime CreatedAt { get; set; }
     }
 }

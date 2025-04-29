@@ -43,6 +43,8 @@ builder.Services.AddDbContext<AqualinaAPIContext>(dbContextOptions => dbContextO
 builder.Services.AddScoped<IUserContextService, UserContextService>();
 builder.Services.AddHttpContextAccessor();
 
+builder.Services.AddAutoMapper(typeof(UserProfile));
+
 builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddSingleton<IHashingService, HashingService>();

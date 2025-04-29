@@ -5,6 +5,7 @@ namespace Services.Main.Interfaces
 {
     public interface IUserService
     {
-        User? Validate(CreedentialsDTO dto);
+        Task<User?> ValidateAsync(CreedentialsDTO dto);
+        Task<User?> UpdateUserAsync(UserForUpdateDTO dto, int userId);
     }
 }
