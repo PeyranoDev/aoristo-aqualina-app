@@ -1,9 +1,4 @@
-﻿using Common.Enum;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using Data.Enum;
 
 namespace Data.Entities
 {
@@ -11,5 +6,6 @@ namespace Data.Entities
     {
         public int Id { get; set; }
         public UserRoleEnum Type { get; set; }
+        public ICollection<User> Users { get; set; }
     }
 }

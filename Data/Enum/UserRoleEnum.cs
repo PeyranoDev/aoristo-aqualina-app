@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Common.Enum
+namespace Data.Enum
 {
     public enum UserRoleEnum
     {

@@ -4,12 +4,12 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Common.Enum
+namespace Data.Enum
 {
-    public enum  ReservationStatusEnum
-    { 
-        Confirmed,
-        Cancelled,
-        Completed
+    public enum AmenityTypeEnum
+    {
+        Sauna,
+        HidroMasajes,
+        SUM,
     }
 }

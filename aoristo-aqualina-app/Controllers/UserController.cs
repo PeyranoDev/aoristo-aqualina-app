@@ -130,7 +130,7 @@ namespace aoristo_aqualina_app.Controllers
                 return StatusCode(500, $"Internal server error: {ex.Message}");
             }
         }
-        [HttpGet]
+        [HttpGet("all")]
         [Authorize(Roles = "Admin")]
         public async Task<ActionResult<PagedResponse<UserForResponse>>> GetUsers([FromQuery] PaginationParams pagination,[FromQuery] UserFilterParams filters)
         {

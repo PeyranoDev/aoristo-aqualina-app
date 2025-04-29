@@ -14,7 +14,7 @@ namespace Data.Entities
         public string Color { get; set; }
         public bool IsParked { get; set; }
 
-        public List<VehicleRequest> Requests { get; set; }
+        public ICollection<Request>? Requests { get; set; }
     }
 }
 
