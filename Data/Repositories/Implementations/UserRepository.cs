@@ -8,12 +8,7 @@ namespace Data.Repositories.Implementations
 {
     public class UserRepository : IUserRepository
     {
-        private readonly AqualinaAPIContext _context;
 
-        public UserRepository(AqualinaAPIContext context)
-        {
-            _context = context;
-        }
 
         public async Task<User?> ValidateAsync(string username, string hashedPassword)
         {
