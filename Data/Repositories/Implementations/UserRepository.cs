@@ -24,7 +24,7 @@ namespace Data.Repositories.Implementations
         public async Task<User?> GetByIdAsync(int id)
         {
             return await _context.Users
-                .Include(u => u.Apartment)  
+                .Include(u => u.Apartment)
                 .FirstOrDefaultAsync(u => u.Id == id);
         }
 
