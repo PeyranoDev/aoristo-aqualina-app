@@ -4,14 +4,11 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Data.Entities
+namespace Common.Models.Requests
 {
-    public class Apartment
+    public class ApartmentForCreateDTO
     {
-        public int Id { get; set; }
         public string Identifier { get; set; } = string.Empty;
-        public ICollection<User>? Users { get; set; }
-        public bool IsActive { get; set; }
-
+        public bool? IsActive { get; set; }
     }
 }

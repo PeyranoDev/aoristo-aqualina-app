@@ -1,4 +1,5 @@
 ﻿using Data.Entities;
+using Data.Enum;
 using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
@@ -24,6 +25,7 @@ namespace Data
         public DbSet<Role> Roles { get; set; }
         public DbSet<Request> Requests { get; set; }
         public DbSet<News> News { get; set; }
+        public DbSet<Invitation> Invitations { get; set; }
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             modelBuilder.Entity<User>()
@@ -62,6 +64,36 @@ namespace Data
                 .HasForeignKey(r => r.VehicleId)
                 .OnDelete(DeleteBehavior.Restrict);
 
+            modelBuilder.Entity<Role>().HasData(
+                    new Role
+                    {
+                        Id = 1,
+                        
+                        Type = UserRoleEnum.Admin
+                    },
+                    new Role
+                    {
+                        Id = 2,
+                        Type = UserRoleEnum.Security
+                    },
+                    new Role
+                    {
+                        Id = 3,
+                        Type = UserRoleEnum.User
+                    }
+            
+            );
+            modelBuilder.Entity<Apartment>().HasData(
+                new Apartment
+                {
+                    Id = 1,
+                    Identifier = "1A",
+                    IsActive = true
+                }
+            );
         }
     }
 }
+
+   
+
