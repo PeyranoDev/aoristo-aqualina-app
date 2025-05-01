@@ -26,6 +26,9 @@ builder.Services.AddControllers();
 builder.Services.AddHealthChecks();
 
 builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddSwaggerGen();
+
+
 
 builder.Services.AddDbContext<AqualinaAPIContext>(dbContextOptions => dbContextOptions.UseSqlite(builder.Configuration["ConnectionStrings:AqualinaAPIDBConnectionString"]));
 
@@ -34,9 +37,17 @@ builder.Services.AddHttpContextAccessor();
 
 builder.Services.AddAutoMapper(typeof(UserProfile));
 
+// Inyecciones de dependencia:
+
+builder.Services.AddScoped<IUserContextService, UserContextService>();
 builder.Services.AddSingleton<ISecretProvider, AzureKeyVaultSecretProvider>();
 builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<IUserRepository, UserRepository>();
+builder.Services.AddScoped<IApartmentRepository, ApartmentRepository>();
+builder.Services.AddScoped<IInvitationRepository, InvitationRepository>();
+builder.Services.AddScoped<IInvitationService, InvitationService>();
+builder.Services.AddScoped<IRoleRepository, RoleRepository>();
+builder.Services.AddScoped<IRoleService, RoleService>();
 builder.Services.AddSingleton<IHashingService, HashingService>();
 
     .AddHttpContextAccessor()
@@ -62,6 +73,7 @@ builder.Services
 
     });
 
+var app = builder.Build();
 
 
 app.UseHttpsRedirection();
