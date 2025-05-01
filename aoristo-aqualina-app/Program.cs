@@ -1,3 +1,6 @@
+using Azure.Identity;
+using Common.Infrastructure.Security.Interface;
+using Common.Security;
 using Data;
 using Data.Repositories.Implementations;
 using Data.Repositories.Interfaces;
@@ -11,28 +14,13 @@ using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
 
-builder.Services.AddSwaggerGen(c => {
-    c.SwaggerDoc("v1", new OpenApiInfo { Title = "Aqualina API", Version = "v1" });
+builder.Services.AddControllers();
+builder.Services.AddHealthChecks();
 
-    // Configuración JWT en Swagger (opcional)
-    c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
-    {
-        In = ParameterLocation.Header,
-        Description = "Ingresa el token JWT",
-        Name = "Authorization",
-        Type = SecuritySchemeType.Http,
-        Scheme = "Bearer"
-    });
+builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddSwaggerGen();
 
-    c.AddSecurityRequirement(new OpenApiSecurityRequirement {
-        {
-            new OpenApiSecurityScheme {
-                Reference = new OpenApiReference { Type = ReferenceType.SecurityScheme, Id = "Bearer" }
-            },
-            new string[] { }
-        }
-    });
-});
+
 
 builder.Services.AddControllers();
 builder.Services.AddHealthChecks();
@@ -46,16 +34,20 @@ builder.Services.AddHttpContextAccessor();
 
 builder.Services.AddAutoMapper(typeof(UserProfile));
 
+builder.Services.AddSingleton<ISecretProvider, AzureKeyVaultSecretProvider>();
 builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddSingleton<IHashingService, HashingService>();
 
-builder.Services
     .AddHttpContextAccessor()
     .AddAuthorization()
+builder.Services
     .AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>
     {
+        var secretProvider = builder.Services.BuildServiceProvider()
+        .GetRequiredService<ISecretProvider>();
+
         options.TokenValidationParameters = new TokenValidationParameters
         {
             ValidateIssuer = true,
@@ -64,14 +56,13 @@ builder.Services
             ValidateIssuerSigningKey = true,
             ValidIssuer = builder.Configuration["Jwt:Issuer"],
             ValidAudience = builder.Configuration["Jwt:Audience"],
-            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"]))
+            IssuerSigningKey = new SymmetricSecurityKey(
+                Encoding.UTF8.GetBytes(secretProvider.GetSecret("JWT-Secret-Key")))
         };
+
     });
 
-var app = builder.Build();
 
-app.UseSwagger();
-app.UseSwaggerUI();
 
 app.UseHttpsRedirection();
 
