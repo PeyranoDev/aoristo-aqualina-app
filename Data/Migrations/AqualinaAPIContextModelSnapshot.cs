@@ -29,7 +29,7 @@ namespace Data.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Amenities", (string)null);
+                    b.ToTable("Amenities");
                 });
 
             modelBuilder.Entity("Data.Entities.AmenityAvailability", b =>
@@ -54,7 +54,7 @@ namespace Data.Migrations
 
                     b.HasIndex("AmenityId");
 
-                    b.ToTable("AmenityAvailability", (string)null);
+                    b.ToTable("AmenityAvailability");
                 });
 
             modelBuilder.Entity("Data.Entities.Apartment", b =>
@@ -72,54 +72,7 @@ namespace Data.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Apartments", (string)null);
-
-                    b.HasData(
-                        new
-                        {
-                            Id = 1,
-                            Identifier = "1A",
-                            IsActive = true
-                        });
-                });
-
-            modelBuilder.Entity("Data.Entities.Invitation", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("INTEGER");
-
-                    b.Property<int?>("ApartmentId")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("TEXT");
-
-                    b.Property<int>("CreatedById")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<string>("Email")
-                        .IsRequired()
-                        .HasColumnType("TEXT");
-
-                    b.Property<DateTime>("ExpiresAt")
-                        .HasColumnType("TEXT");
-
-                    b.Property<bool>("IsUsed")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<int>("RoleId")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<string>("Token")
-                        .IsRequired()
-                        .HasColumnType("TEXT");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("RoleId");
-
-                    b.ToTable("Invitations", (string)null);
+                    b.ToTable("Apartments");
                 });
 
             modelBuilder.Entity("Data.Entities.News", b =>
@@ -145,7 +98,7 @@ namespace Data.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("News", (string)null);
+                    b.ToTable("News");
                 });
 
             modelBuilder.Entity("Data.Entities.Request", b =>
@@ -175,7 +128,7 @@ namespace Data.Migrations
 
                     b.HasIndex("VehicleId");
 
-                    b.ToTable("Requests", (string)null);
+                    b.ToTable("Requests");
                 });
 
             modelBuilder.Entity("Data.Entities.Reservation", b =>
@@ -211,7 +164,7 @@ namespace Data.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("Reservations", (string)null);
+                    b.ToTable("Reservations");
                 });
 
             modelBuilder.Entity("Data.Entities.Role", b =>
@@ -225,24 +178,7 @@ namespace Data.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Roles", (string)null);
-
-                    b.HasData(
-                        new
-                        {
-                            Id = 1,
-                            Type = 0
-                        },
-                        new
-                        {
-                            Id = 2,
-                            Type = 1
-                        },
-                        new
-                        {
-                            Id = 3,
-                            Type = 2
-                        });
+                    b.ToTable("Roles");
                 });
 
             modelBuilder.Entity("Data.Entities.Vehicle", b =>
@@ -273,7 +209,7 @@ namespace Data.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("Vehicles", (string)null);
+                    b.ToTable("Vehicles");
                 });
 
             modelBuilder.Entity("User", b =>
@@ -282,7 +218,7 @@ namespace Data.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("INTEGER");
 
-                    b.Property<int?>("ApartmentId")
+                    b.Property<int>("ApartmentId")
                         .HasColumnType("INTEGER");
 
                     b.Property<string>("Email")
@@ -321,7 +257,7 @@ namespace Data.Migrations
 
                     b.HasIndex("RoleId");
 
-                    b.ToTable("Users", (string)null);
+                    b.ToTable("Users");
                 });
 
             modelBuilder.Entity("Data.Entities.AmenityAvailability", b =>
@@ -333,17 +269,6 @@ namespace Data.Migrations
                         .IsRequired();
 
                     b.Navigation("Amenity");
-                });
-
-            modelBuilder.Entity("Data.Entities.Invitation", b =>
-                {
-                    b.HasOne("Data.Entities.Role", "Role")
-                        .WithMany()
-                        .HasForeignKey("RoleId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Role");
                 });
 
             modelBuilder.Entity("Data.Entities.Request", b =>
@@ -396,7 +321,8 @@ namespace Data.Migrations
                     b.HasOne("Data.Entities.Apartment", "Apartment")
                         .WithMany("Users")
                         .HasForeignKey("ApartmentId")
-                        .OnDelete(DeleteBehavior.Restrict);
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
 
                     b.HasOne("Data.Entities.Role", "Role")
                         .WithMany("Users")

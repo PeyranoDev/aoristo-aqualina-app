@@ -107,8 +107,7 @@ namespace aoristo_aqualina_app.Controllers
                     return Forbid("You do not have permission to view this user.");
                 }
 
-                var response = _mapper.Map<UserForResponse>(user);
-                return Ok(response);
+                return Ok(user);
             }
             catch (Exception ex)
             {

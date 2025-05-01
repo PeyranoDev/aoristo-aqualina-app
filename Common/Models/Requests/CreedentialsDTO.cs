@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace Common.Models.Requests
 {
-    public class CredentialsDTO
+    public class CreedentialsDTO
     {
         public string Username { get; set; }
         public string Password { get; set; }

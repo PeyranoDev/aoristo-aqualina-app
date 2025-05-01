@@ -1,7 +1,6 @@
 ﻿using Common.Models.Requests;
 using Data.Entities;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Services.Main.Interfaces;
 using System.IdentityModel.Tokens.Jwt;
@@ -24,7 +23,7 @@ namespace aoristo_aqualina_app.Controllers
         }
 
         [HttpPost("login")]
-        public async Task<IActionResult> Auth([FromBody] CredentialsDTO dto)
+        public async Task<IActionResult> Auth([FromBody] CreedentialsDTO dto)
         {
             User? user = await _userService.ValidateAsync(dto);
 
@@ -53,17 +52,6 @@ namespace aoristo_aqualina_app.Controllers
             var jwt = new JwtSecurityTokenHandler().WriteToken(tokenDescriptor);
 
             return Ok(new { AccessToken = jwt });
-        }
-
-        [HttpPost("register")]
-        public async Task<IActionResult> Register([FromBody] UserForCreateDTO dto)
-        {
-            if (await _userService.EmailExistsAsync(dto.Email) &&
-                await _userService.UsernameExistsAsync(dto.Username))
-                return BadRequest();
-
-            var userResponse = _userService.CreateUserAsync(dto);
-            return Ok(userResponse);
         }
     }
 }

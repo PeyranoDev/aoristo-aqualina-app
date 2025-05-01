@@ -10,7 +10,7 @@ namespace Data.Entities
     {
         public int Id { get; set; }
         public string Identifier { get; set; } = string.Empty;
-        public ICollection<User>? Users { get; set; }
+        public ICollection<User> Users { get; set; }
         public bool IsActive { get; set; }
 
     }
