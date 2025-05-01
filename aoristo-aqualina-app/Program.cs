@@ -1,9 +1,13 @@
 using Azure.Identity;
 using Data;
+using Data.Repositories.Implementations;
+using Data.Repositories.Interfaces;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
+using Services.Main.Implementations;
+using Services.Main.Interfaces;
 using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -23,6 +27,17 @@ builder.Services.AddDbContext<AqualinaAPIContext>(options =>
             errorNumbersToAdd: null);
     });
 });
+
+builder.Services.AddScoped<IUserContextService, UserContextService>();
+builder.Services.AddScoped<IUserService, UserService>();
+builder.Services.AddScoped<IUserRepository, UserRepository>();
+builder.Services.AddScoped<IApartmentRepository, ApartmentRepository>();
+builder.Services.AddScoped<IInvitationRepository, InvitationRepository>();
+builder.Services.AddScoped<IInvitationService, InvitationService>();
+builder.Services.AddScoped<IRoleRepository, RoleRepository>();
+builder.Services.AddScoped<IRoleService, RoleService>();
+builder.Services.AddSingleton<IHashingService, HashingService>();
+builder.Services.AddAutoMapper(typeof(UserProfile));
 
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>

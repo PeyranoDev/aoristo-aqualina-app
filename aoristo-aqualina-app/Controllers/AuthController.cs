@@ -23,7 +23,7 @@ namespace aoristo_aqualina_app.Controllers
             _userService = userService;
         }
 
-        [HttpPost("login")]
+        [HttpPut("login")]
         public async Task<IActionResult> Auth([FromBody] CredentialsDTO dto)
         {
             User? user = await _userService.ValidateAsync(dto);
