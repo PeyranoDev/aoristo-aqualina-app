@@ -3,6 +3,7 @@ using System;
 using Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -10,9 +11,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Data.Migrations
 {
     [DbContext(typeof(AqualinaAPIContext))]
-    partial class AqualinaAPIContextModelSnapshot : ModelSnapshot
+    [Migration("20250430014209_third")]
+    partial class third
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder.HasAnnotation("ProductVersion", "8.0.0");
@@ -29,7 +32,7 @@ namespace Data.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Amenities", (string)null);
+                    b.ToTable("Amenities");
                 });
 
             modelBuilder.Entity("Data.Entities.AmenityAvailability", b =>
@@ -54,7 +57,7 @@ namespace Data.Migrations
 
                     b.HasIndex("AmenityId");
 
-                    b.ToTable("AmenityAvailability", (string)null);
+                    b.ToTable("AmenityAvailability");
                 });
 
             modelBuilder.Entity("Data.Entities.Apartment", b =>
@@ -72,7 +75,7 @@ namespace Data.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Apartments", (string)null);
+                    b.ToTable("Apartments");
 
                     b.HasData(
                         new
@@ -119,7 +122,7 @@ namespace Data.Migrations
 
                     b.HasIndex("RoleId");
 
-                    b.ToTable("Invitations", (string)null);
+                    b.ToTable("Invitations");
                 });
 
             modelBuilder.Entity("Data.Entities.News", b =>
@@ -145,7 +148,7 @@ namespace Data.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("News", (string)null);
+                    b.ToTable("News");
                 });
 
             modelBuilder.Entity("Data.Entities.Request", b =>
@@ -175,7 +178,7 @@ namespace Data.Migrations
 
                     b.HasIndex("VehicleId");
 
-                    b.ToTable("Requests", (string)null);
+                    b.ToTable("Requests");
                 });
 
             modelBuilder.Entity("Data.Entities.Reservation", b =>
@@ -211,7 +214,7 @@ namespace Data.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("Reservations", (string)null);
+                    b.ToTable("Reservations");
                 });
 
             modelBuilder.Entity("Data.Entities.Role", b =>
@@ -225,7 +228,7 @@ namespace Data.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Roles", (string)null);
+                    b.ToTable("Roles");
 
                     b.HasData(
                         new
@@ -273,7 +276,7 @@ namespace Data.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("Vehicles", (string)null);
+                    b.ToTable("Vehicles");
                 });
 
             modelBuilder.Entity("User", b =>
@@ -282,7 +285,7 @@ namespace Data.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("INTEGER");
 
-                    b.Property<int?>("ApartmentId")
+                    b.Property<int>("ApartmentId")
                         .HasColumnType("INTEGER");
 
                     b.Property<string>("Email")
@@ -321,7 +324,7 @@ namespace Data.Migrations
 
                     b.HasIndex("RoleId");
 
-                    b.ToTable("Users", (string)null);
+                    b.ToTable("Users");
                 });
 
             modelBuilder.Entity("Data.Entities.AmenityAvailability", b =>
@@ -396,7 +399,8 @@ namespace Data.Migrations
                     b.HasOne("Data.Entities.Apartment", "Apartment")
                         .WithMany("Users")
                         .HasForeignKey("ApartmentId")
-                        .OnDelete(DeleteBehavior.Restrict);
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
 
                     b.HasOne("Data.Entities.Role", "Role")
                         .WithMany("Users")
