@@ -83,14 +83,6 @@ namespace Data
                     }
             
             );
-            modelBuilder.Entity<Apartment>().HasData(
-                new Apartment
-                {
-                    Id = 1,
-                    Identifier = "1A",
-                    IsActive = true
-                }
-            );
         }
     }
 }

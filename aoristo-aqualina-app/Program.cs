@@ -1,64 +1,32 @@
 using Azure.Identity;
-using Common.Infrastructure.Security.Interface;
-using Common.Security;
 using Data;
-using Data.Repositories.Implementations;
-using Data.Repositories.Interfaces;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
-using Services.Main.Implementations;
-using Services.Main.Interfaces;
 using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
 
-builder.Services.AddControllers();
-builder.Services.AddHealthChecks();
+var keyVaultEndpoint = new Uri(builder.Configuration["AzureKeyVault:Endpoint"]!);
 
-builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
+builder.Configuration.AddAzureKeyVault(keyVaultEndpoint,new DefaultAzureCredential());
 
+builder.Services.AddDbContext<AqualinaAPIContext>(options =>
+{
+    var connectionString = builder.Configuration.GetConnectionString("SQL-ConnectionString");
+    options.UseSqlServer(connectionString, sqlOptions =>
+    {
+        sqlOptions.EnableRetryOnFailure(
+            maxRetryCount: 5,
+            maxRetryDelay: TimeSpan.FromSeconds(10),
+            errorNumbersToAdd: null);
+    });
+});
 
-
-builder.Services.AddControllers();
-builder.Services.AddHealthChecks();
-
-builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
-
-
-
-builder.Services.AddDbContext<AqualinaAPIContext>(dbContextOptions => dbContextOptions.UseSqlite(builder.Configuration["ConnectionStrings:AqualinaAPIDBConnectionString"]));
-
-builder.Services.AddScoped<IUserContextService, UserContextService>();
-builder.Services.AddHttpContextAccessor();
-
-builder.Services.AddAutoMapper(typeof(UserProfile));
-
-// Inyecciones de dependencia:
-
-builder.Services.AddScoped<IUserContextService, UserContextService>();
-builder.Services.AddSingleton<ISecretProvider, AzureKeyVaultSecretProvider>();
-builder.Services.AddScoped<IUserService, UserService>();
-builder.Services.AddScoped<IUserRepository, UserRepository>();
-builder.Services.AddScoped<IApartmentRepository, ApartmentRepository>();
-builder.Services.AddScoped<IInvitationRepository, InvitationRepository>();
-builder.Services.AddScoped<IInvitationService, InvitationService>();
-builder.Services.AddScoped<IRoleRepository, RoleRepository>();
-builder.Services.AddScoped<IRoleService, RoleService>();
-builder.Services.AddSingleton<IHashingService, HashingService>();
-
-    .AddHttpContextAccessor()
-    .AddAuthorization()
-builder.Services
-    .AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>
     {
-        var secretProvider = builder.Services.BuildServiceProvider()
-        .GetRequiredService<ISecretProvider>();
-
         options.TokenValidationParameters = new TokenValidationParameters
         {
             ValidateIssuer = true,
@@ -68,24 +36,63 @@ builder.Services
             ValidIssuer = builder.Configuration["Jwt:Issuer"],
             ValidAudience = builder.Configuration["Jwt:Audience"],
             IssuerSigningKey = new SymmetricSecurityKey(
-                Encoding.UTF8.GetBytes(secretProvider.GetSecret("JWT-Secret-Key")))
+                Encoding.UTF8.GetBytes(builder.Configuration["JWT-Secret-Key"]))
         };
-
     });
+
+
+builder.Services.AddHealthChecks();
+builder.Services.AddControllers();
+builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddSwaggerGen(c =>
+{
+    c.SwaggerDoc("v1", new OpenApiInfo { Title = "Aqualina API", Version = "v1" });
+    c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
+    {
+        Description = "JWT Authorization header using the Bearer scheme.",
+        Name = "Authorization",
+        In = ParameterLocation.Header,
+        Type = SecuritySchemeType.ApiKey,
+        Scheme = "Bearer"
+    });
+    c.AddSecurityRequirement(new OpenApiSecurityRequirement
+    {
+        {
+            new OpenApiSecurityScheme
+            {
+                Reference = new OpenApiReference { Type = ReferenceType.SecurityScheme, Id = "Bearer" }
+            },
+            Array.Empty<string>()
+        }
+    });
+});
+
 
 var app = builder.Build();
 
 
+app.UseExceptionHandler("/error"); 
 app.UseHttpsRedirection();
-
+app.UseRouting();
 app.UseAuthentication();
-
 app.UseAuthorization();
 
 app.MapControllers();
-
 app.MapHealthChecks("/healthz");
+app.MapGet("/", () => "Aqualina API (Production)");
 
-app.MapGet("/", () => "Hello World!");
+if (app.Environment.IsDevelopment())
+{
+    app.UseSwagger();
+    app.UseSwaggerUI();
+}
+else
+{
+    app.Use(async (context, next) =>
+    {
+        context.Response.Headers.Add("Strict-Transport-Security", "max-age=31536000");
+        await next();
+    });
+}
 
 app.Run();
