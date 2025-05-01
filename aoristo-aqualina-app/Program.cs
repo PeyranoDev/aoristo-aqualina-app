@@ -1,3 +1,6 @@
+using Azure.Identity;
+using Common.Infrastructure.Security.Interface;
+using Common.Security;
 using Data;
 using Data.Repositories.Implementations;
 using Data.Repositories.Interfaces;
@@ -11,32 +14,13 @@ using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
 
-
-
 builder.Services.AddControllers();
+builder.Services.AddHealthChecks();
 
 builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen(setupAction =>
-{
-    setupAction.AddSecurityDefinition("AqualinaAppAuth", new OpenApiSecurityScheme() //Esto va a permitir usar swagger con el token.
-    {
-        Type = SecuritySchemeType.Http,
-        Scheme = "Bearer",
-        Description = "Acá pegar el token generado al loguearse."
-    });
+builder.Services.AddSwaggerGen();
 
-    setupAction.AddSecurityRequirement(new OpenApiSecurityRequirement
-    {
-        {
-            new OpenApiSecurityScheme
-            {
-                Reference = new OpenApiReference
-                {
-                    Type = ReferenceType.SecurityScheme,
-                    Id = "AqualinaAppAuth" } //Tiene que coincidir con el id seteado arriba en la definición
-                }, new List<string>() }
-    });
-});
+
 
 builder.Services.AddDbContext<AqualinaAPIContext>(dbContextOptions => dbContextOptions.UseSqlite(builder.Configuration["ConnectionStrings:AqualinaAPIDBConnectionString"]));
 
@@ -45,16 +29,20 @@ builder.Services.AddHttpContextAccessor();
 
 builder.Services.AddAutoMapper(typeof(UserProfile));
 
+builder.Services.AddSingleton<ISecretProvider, AzureKeyVaultSecretProvider>();
 builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddSingleton<IHashingService, HashingService>();
 
-builder.Services
     .AddHttpContextAccessor()
     .AddAuthorization()
+builder.Services
     .AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>
     {
+        var secretProvider = builder.Services.BuildServiceProvider()
+        .GetRequiredService<ISecretProvider>();
+
         options.TokenValidationParameters = new TokenValidationParameters
         {
             ValidateIssuer = true,
@@ -63,18 +51,13 @@ builder.Services
             ValidateIssuerSigningKey = true,
             ValidIssuer = builder.Configuration["Jwt:Issuer"],
             ValidAudience = builder.Configuration["Jwt:Audience"],
-            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"]))
+            IssuerSigningKey = new SymmetricSecurityKey(
+                Encoding.UTF8.GetBytes(secretProvider.GetSecret("JWT-Secret-Key")))
         };
+
     });
 
-var app = builder.Build();
 
-// Configure the HTTP request pipeline.
-if (app.Environment.IsDevelopment())
-{
-    app.UseSwagger();
-    app.UseSwaggerUI();
-}
 
 app.UseHttpsRedirection();
 
