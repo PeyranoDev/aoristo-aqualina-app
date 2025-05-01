@@ -17,27 +17,7 @@ builder.Services.AddControllers();
 builder.Services.AddHealthChecks();
 
 builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen(setupAction =>
-{
-    setupAction.AddSecurityDefinition("AqualinaAppAuth", new OpenApiSecurityScheme() //Esto va a permitir usar swagger con el token.
-    {
-        Type = SecuritySchemeType.Http,
-        Scheme = "Bearer",
-        Description = "Acá pegar el token generado al loguearse."
-    });
-
-    setupAction.AddSecurityRequirement(new OpenApiSecurityRequirement
-    {
-        {
-            new OpenApiSecurityScheme
-            {
-                Reference = new OpenApiReference
-                {
-                    Type = ReferenceType.SecurityScheme,
-                    Id = "AqualinaAppAuth" } //Tiene que coincidir con el id seteado arriba en la definición
-                }, new List<string>() }
-    });
-});
+builder.Services.AddSwaggerGen();
 
 builder.Services.AddDbContext<AqualinaAPIContext>(dbContextOptions => dbContextOptions.UseSqlite(builder.Configuration["ConnectionStrings:AqualinaAPIDBConnectionString"]));
 
@@ -70,12 +50,8 @@ builder.Services
 
 var app = builder.Build();
 
-// Configure the HTTP request pipeline.
-if (app.Environment.IsDevelopment())
-{
-    app.UseSwagger();
-    app.UseSwaggerUI();
-}
+app.UseSwagger();
+app.UseSwaggerUI();
 
 app.UseHttpsRedirection();
 
