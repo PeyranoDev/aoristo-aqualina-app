@@ -11,7 +11,7 @@ env:
   AZURE_APIM_SERVICENAME: aoristo-aqualina-appapi
   AZURE_APIM_API_ID: aoristo-aqualina-app
   AZURE_APIM_APPSERVICEURL: https://aoristo-aqualina-app.azurewebsites.net
-  SWASHBUCLE_ASPNET_CORE_CLI_PACKAGE_VERSION: 5.6.3
+  SWASHBUCLE_ASPNET_CORE_CLI_PACKAGE_VERSION: 8.1.1
   SWASHBUCKLE_DOTNET_CORE_VERSION: 3.1.x
   API_IMPORT_SPECIFICATION_PATH: aoristo-aqualina-app/publish/swagger.json
   API_IMPORT_DLL: aoristo-aqualina-app/bin/Release/net8.0/aoristo-aqualina-app.dll
