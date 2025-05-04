@@ -1,4 +1,5 @@
 using Azure.Identity;
+using Azure.Security.KeyVault.Secrets;
 using Data;
 
 using Data.Repositories.Implementations;
@@ -13,24 +14,19 @@ using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
 
-var keyVaultEndpoint = new Uri(builder.Configuration["AzureKeyVault:Endpoint"]!);
-builder.Configuration.AddAzureKeyVault(
-    keyVaultEndpoint,
-    new DefaultAzureCredential()
-);
+var credential = new DefaultAzureCredential();
+var client = new SecretClient(new Uri("https://aoristo-key-vault.vault.azure.net/"), credential);
+
+KeyVaultSecret secret = await client.GetSecretAsync("SQL-CONNECTION-STR");
+KeyVaultSecret secretSalt = await client.GetSecretAsync("JWT-Secret-Key");
+
+string connectionString = secret.Value;
+string salt = secretSalt.Value;
 
 builder.Services.AddDbContext<AqualinaAPIContext>(options =>
-{
-    var connectionString = builder.Configuration["SQL-CONNECTION-STR"]; 
-    options.UseSqlServer(connectionString, sqlOptions =>
-    {
-        sqlOptions.EnableRetryOnFailure(
-            maxRetryCount: 5,
-            maxRetryDelay: TimeSpan.FromSeconds(10),
-            errorNumbersToAdd: null
-        );
-    });
-});
+    options.UseSqlServer(builder.Configuration["ConnectionStrings:AoristoAqualinaAPIDBConnectionString"]));
+
+builder.Services.AddHttpContextAccessor();
 
 builder.Services.AddScoped<IUserContextService, UserContextService>();
 builder.Services.AddScoped<IUserService, UserService>();
@@ -55,7 +51,7 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             ValidIssuer = builder.Configuration["Jwt:Issuer"],
             ValidAudience = builder.Configuration["Jwt:Audience"],
             IssuerSigningKey = new SymmetricSecurityKey(
-                Encoding.UTF8.GetBytes(builder.Configuration["JWT-Secret-Key"]))
+                Encoding.UTF8.GetBytes(salt))
         };
     });
 
@@ -99,9 +95,6 @@ app.UseAuthorization();
 app.MapControllers();
 app.MapHealthChecks("/healthz");
 app.MapGet("/", () => "Aqualina API (Production)");
-app.MapGet("/debug/connectionstring", (IConfiguration config) =>
-    new { ConnectionString = config["SQL-CONNECTION-STR"] });
-
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();

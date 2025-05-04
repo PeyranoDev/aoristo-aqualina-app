@@ -362,3 +362,4 @@ MigrationBackup/
 # Fody - auto-generated XML schema
 FodyWeavers.xsd
 /aoristo-aqualina-app/aqualinaapidb.db
+/aoristo-aqualina-app/appsettings.Development.json

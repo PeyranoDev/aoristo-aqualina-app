@@ -17,6 +17,7 @@
 		  </IncludeAssets>
 	  </PackageReference>
 	  <PackageReference Include="Microsoft.Extensions.Caching.Memory" Version="8.0.1" />
+	  <PackageReference Include="Microsoft.Extensions.Configuration" Version="2.1.0" />
   </ItemGroup>
 
 </Project>

@@ -14,8 +14,9 @@ namespace Data
 {
     public class AqualinaAPIContext : DbContext
     {
-        public AqualinaAPIContext(DbContextOptions<AqualinaAPIContext> options) : base(options)
+        public AqualinaAPIContext(DbContextOptions<AqualinaAPIContext> options): base(options)
         {
+
         }
         public DbSet<Vehicle> Vehicles { get; set; }
         public DbSet<Reservation> Reservations { get; set; }
