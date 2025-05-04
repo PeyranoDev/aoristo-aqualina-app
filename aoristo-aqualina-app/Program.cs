@@ -1,5 +1,6 @@
 using Azure.Identity;
 using Data;
+
 using Data.Repositories.Implementations;
 using Data.Repositories.Interfaces;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -13,18 +14,21 @@ using System.Text;
 var builder = WebApplication.CreateBuilder(args);
 
 var keyVaultEndpoint = new Uri(builder.Configuration["AzureKeyVault:Endpoint"]!);
-
-builder.Configuration.AddAzureKeyVault(keyVaultEndpoint,new DefaultAzureCredential());
+builder.Configuration.AddAzureKeyVault(
+    keyVaultEndpoint,
+    new DefaultAzureCredential()
+);
 
 builder.Services.AddDbContext<AqualinaAPIContext>(options =>
 {
-    var connectionString = builder.Configuration.GetConnectionString("SQL-ConnectionString");
+    var connectionString = builder.Configuration["SQL-CONNECTION-STR"]; 
     options.UseSqlServer(connectionString, sqlOptions =>
     {
         sqlOptions.EnableRetryOnFailure(
             maxRetryCount: 5,
             maxRetryDelay: TimeSpan.FromSeconds(10),
-            errorNumbersToAdd: null);
+            errorNumbersToAdd: null
+        );
     });
 });
 
@@ -95,6 +99,8 @@ app.UseAuthorization();
 app.MapControllers();
 app.MapHealthChecks("/healthz");
 app.MapGet("/", () => "Aqualina API (Production)");
+app.MapGet("/debug/connectionstring", (IConfiguration config) =>
+    new { ConnectionString = config["SQL-CONNECTION-STR"] });
 
 if (app.Environment.IsDevelopment())
 {
