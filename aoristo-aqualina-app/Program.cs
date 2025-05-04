@@ -1,4 +1,4 @@
-using Azure.Identity;
+﻿using Azure.Identity;
 using Azure.Security.KeyVault.Secrets;
 using Data;
 
@@ -17,14 +17,16 @@ var builder = WebApplication.CreateBuilder(args);
 var credential = new DefaultAzureCredential();
 var client = new SecretClient(new Uri("https://aoristo-key-vault.vault.azure.net/"), credential);
 
-KeyVaultSecret secret = await client.GetSecretAsync("SQL-CONNECTION-STR");
-KeyVaultSecret secretSalt = await client.GetSecretAsync("JWT-Secret-Key");
+KeyVaultSecret sqlSecret = await client.GetSecretAsync("SQL‑CONNECTION‑STR");
+KeyVaultSecret jwtSecret = await client.GetSecretAsync("JWT‑Secret‑Key");
 
-string connectionString = secret.Value;
-string salt = secretSalt.Value;
+string connectionString = sqlSecret.Value;
+string jwtSalt = jwtSecret.Value;
+
 
 builder.Services.AddDbContext<AqualinaAPIContext>(options =>
-    options.UseSqlServer(builder.Configuration["ConnectionStrings:AoristoAqualinaAPIDBConnectionString"]));
+    options.UseSqlServer(
+        builder.Configuration.GetConnectionString(connectionString)));
 
 builder.Services.AddHttpContextAccessor();
 
@@ -51,7 +53,7 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             ValidIssuer = builder.Configuration["Jwt:Issuer"],
             ValidAudience = builder.Configuration["Jwt:Audience"],
             IssuerSigningKey = new SymmetricSecurityKey(
-                Encoding.UTF8.GetBytes(salt))
+                Encoding.UTF8.GetBytes(jwtSalt))
         };
     });
 
