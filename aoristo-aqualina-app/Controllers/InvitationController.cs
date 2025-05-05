@@ -40,7 +40,7 @@ namespace aoristo_aqualina_app.Controllers
         }
 
         [HttpPost]
-        [Authorize(Roles = "Admin, User")]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> CreateInvitation([FromBody] CreateInvitationDto dto)
         {
             var userId = GetUserIdFromToken();
