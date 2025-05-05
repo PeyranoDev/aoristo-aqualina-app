@@ -62,7 +62,7 @@ namespace aoristo_aqualina_app.Controllers
                 await _userService.UsernameExistsAsync(dto.Username))
                 return BadRequest();
 
-            var userResponse = _userService.CreateUserAsync(dto);
+            var userResponse = await _userService.CreateUserAsync(dto);
             return Ok(userResponse);
         }
     }
