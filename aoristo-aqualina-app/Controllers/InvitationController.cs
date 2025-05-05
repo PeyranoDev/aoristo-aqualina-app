@@ -28,15 +28,15 @@ namespace aoristo_aqualina_app.Controllers
             _roleService = roleService;
         }
 
-        private int GetUserIdFromToken()
+        private int? GetUserIdFromToken()
         {
-            var userIdClaim = User.FindFirst("sub")?.Value;
-            return int.TryParse(userIdClaim, out var id) ? id : 0;
+            var userIdClaim = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            return int.TryParse(userIdClaim, out var id) ? id : null;
         }
 
         private string GetUserRole()
         {
-            return User.FindFirst(ClaimTypes.Role)?.Value ?? string.Empty;
+            return User.FindFirstValue(ClaimTypes.Role) ?? string.Empty;
         }
 
         [HttpPost]

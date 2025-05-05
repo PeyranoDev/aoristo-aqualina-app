@@ -38,7 +38,7 @@ namespace aoristo_aqualina_app.Controllers
 
             var claims = new List<Claim>
             {
-               new Claim("sub", Convert.ToInt32(user.Id).ToString()),
+               new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
                 new Claim("username", user.Username),
                 new Claim("full name", $"{user.Name} {user.Surname}"),
                 new Claim(ClaimTypes.Role, user.Role.Type.ToString())
