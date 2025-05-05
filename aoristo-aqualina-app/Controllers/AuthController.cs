@@ -61,9 +61,10 @@ namespace aoristo_aqualina_app.Controllers
         [HttpPost("register")]
         public async Task<IActionResult> Register([FromBody] UserForCreateDTO dto)
         {
-            if (await _userService.EmailExistsAsync(dto.Email) &&
-                await _userService.UsernameExistsAsync(dto.Username))
-                return BadRequest();
+            if (await _userService.EmailExistsAsync(dto.Email))
+                return BadRequest("Email already exists.");
+            if (await _userService.UsernameExistsAsync(dto.Username))
+                return BadRequest("Username already exists.");
 
             var userResponse = await _userService.CreateUserAsync(dto);
             return Ok(userResponse);

@@ -119,10 +119,15 @@ namespace aoristo_aqualina_app.Controllers
         [Authorize(Roles = "Admin, User, Security")]
         public async Task<IActionResult> GetCurrentUser()
         {
-            var userId = _userContextService.GetUserId();
+            var userId = User.FindFirst("sub")?.Value;
+            int.TryParse(userId, out var id);
             try
             {
-                var user = await _userService.GetByIdAsync(userId);
+                var user = await _userService.GetByIdAsync(id);
+                if (user == null)
+                {
+                    return NotFound("User not found.");
+                }
                 var response = _mapper.Map<UserForResponse>(user);
                 return Ok(response);
             }
