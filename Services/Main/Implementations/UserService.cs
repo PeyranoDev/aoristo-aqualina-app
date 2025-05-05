@@ -35,8 +35,13 @@ namespace Services.Main.Implementations
 
         public async Task<User?> ValidateAsync(CredentialsDTO dto)
         {
-            var hashedPassword = _hashingService.HashPassword(dto.Password);
-            return await _userRepo.ValidateAsync(dto.Username, hashedPassword);
+            var user = await _userRepo.GetByUsernameAsync(dto.Username);
+            if (user == null)
+                return null;
+
+            bool ok = _hashingService.VerifyPassword(dto.Password, user.PasswordHash);
+            return ok ? user : null;
+
         }
 
         public async Task<User?> UpdateUserAsync(UserForUpdateDTO dto, int userId)

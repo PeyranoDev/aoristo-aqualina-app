@@ -23,6 +23,14 @@ KeyVaultSecret jwtSecret = await client.GetSecretAsync("JWTSecret");
 string connectionString = sqlSecret.Value;
 string jwtSalt = jwtSecret.Value;
 
+var jwtOptions = new JwtOptions
+{
+    Key = jwtSalt,
+    Issuer = builder.Configuration["Jwt:Issuer"],
+    Audience = builder.Configuration["Jwt:Audience"]
+};
+builder.Services.AddSingleton(jwtOptions);
+
 
 builder.Services.AddDbContext<AqualinaAPIContext>(options =>
     options.UseSqlServer(connectionString));

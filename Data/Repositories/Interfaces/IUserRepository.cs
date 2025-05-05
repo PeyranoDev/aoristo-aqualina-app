@@ -10,9 +10,10 @@ namespace Data.Repositories.Interfaces
         Task<User?> UpdateAsync(User user);
 
         Task<bool> EmailExistsAsync(string email);
-        Task<bool> UsernameExistsAsync(string username);
+        Task<User?> GetByUsernameAsync(string username);
         Task<User> CreateAsync(User user);
         Task<int> DeleteAsync(User user);
         IQueryable<User> GetQueryable();
+        Task<bool> UsernameExistsAsync(string username);
     }
 }

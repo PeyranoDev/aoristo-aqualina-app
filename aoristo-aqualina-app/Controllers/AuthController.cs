@@ -1,4 +1,5 @@
-﻿using Common.Models.Requests;
+﻿using Azure.Security.KeyVault.Secrets;
+using Common.Models.Requests;
 using Data.Entities;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -16,11 +17,13 @@ namespace aoristo_aqualina_app.Controllers
     {
         private readonly IConfiguration _config;
         private readonly IUserService _userService;
+        private readonly JwtOptions _jwtOptions;
 
-        public AuthController(IConfiguration config, IUserService userService)
+        public AuthController(JwtOptions jwtOptions, IConfiguration config, IUserService userService)
         {
             _config = config;
             _userService = userService;
+            _jwtOptions = jwtOptions;
         }
 
         [HttpPut("login")]
@@ -41,7 +44,7 @@ namespace aoristo_aqualina_app.Controllers
                 new Claim(ClaimTypes.Role, user.Role.Type.ToString())
             };
 
-            var securityKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_config["Jwt:Key"]));
+            var securityKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_jwtOptions.Key));
             var credentials = new SigningCredentials(securityKey, SecurityAlgorithms.HmacSha256Signature);
             var tokenDescriptor = new JwtSecurityToken(
                 issuer: _config["Jwt:Issuer"],

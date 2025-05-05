@@ -20,6 +20,10 @@ namespace Data.Repositories.Implementations
             return await _context.Users
                 .FirstOrDefaultAsync(u => u.Username == username && u.PasswordHash == hashedPassword);
         }
+        public async Task<bool> UsernameExistsAsync(string username)
+        {
+            return await _context.Users.AnyAsync(u => u.Username == username);
+        }
 
         public async Task<User?> GetByIdAsync(int id)
         {
@@ -48,9 +52,11 @@ namespace Data.Repositories.Implementations
             return await _context.Users.AnyAsync(u => u.Email == email);
         }
 
-        public async Task<bool> UsernameExistsAsync(string username)
+        public async Task<User?> GetByUsernameAsync(string username)
         {
-            return await _context.Users.AnyAsync(u => u.Username == username);
+            return await _context.Users
+                .Include(u => u.Role)
+                .FirstOrDefaultAsync(u => u.Username == username);
         }
 
         public async Task<User> CreateAsync(User user)
