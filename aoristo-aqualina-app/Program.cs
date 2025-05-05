@@ -25,12 +25,12 @@ string jwtSalt = jwtSecret.Value;
 
 var jwtOptions = new JwtOptions
 {
-    Key = jwtSalt,
+    Key = jwtSecret.Value,
     Issuer = builder.Configuration["Jwt:Issuer"],
     Audience = builder.Configuration["Jwt:Audience"]
 };
-builder.Services.AddSingleton(jwtOptions);
 
+builder.Services.AddSingleton(jwtOptions);
 
 builder.Services.AddDbContext<AqualinaAPIContext>(options =>
     options.UseSqlServer(connectionString));
@@ -60,9 +60,10 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             ValidIssuer = builder.Configuration["Jwt:Issuer"],
             ValidAudience = builder.Configuration["Jwt:Audience"],
             IssuerSigningKey = new SymmetricSecurityKey(
-                Encoding.UTF8.GetBytes(jwtSalt))
+                Encoding.UTF8.GetBytes(jwtOptions.Key))
         };
     });
+
 
 
 builder.Services.AddHealthChecks();

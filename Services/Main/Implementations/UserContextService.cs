@@ -14,8 +14,20 @@ public class UserContextService : IUserContextService
     public int GetUserId()
     {
         var claim = _httpContextAccessor.HttpContext?.User?.FindFirst("sub")?.Value;
-        return int.TryParse(claim, out var id) ? id : throw new UnauthorizedAccessException("Invalid user ID claim.");
+
+        if (string.IsNullOrEmpty(claim))
+        {
+            throw new UnauthorizedAccessException("User ID claim 'sub' is missing.");
+        }
+
+        if (!int.TryParse(claim, out var id))
+        {
+            throw new UnauthorizedAccessException($"User ID claim 'sub' is not a valid int: {claim}");
+        }
+
+        return id;
     }
+
 
     public string GetUserRole()
     {
