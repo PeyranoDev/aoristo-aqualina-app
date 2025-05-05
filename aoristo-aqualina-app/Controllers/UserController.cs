@@ -13,29 +13,40 @@ using System.Text;
 
 namespace aoristo_aqualina_app.Controllers
 {
+
+
     [Route("user")]
     [ApiController]
     public class UserController : ControllerBase
     {
         private readonly IUserService _userService;
-        private readonly IUserContextService _userContextService;
         private readonly IMapper _mapper;
 
-        public UserController(IUserService userService, IUserContextService userContextService, IMapper mapper)
+        public UserController(IUserService userService, IMapper mapper)
         {
             _userService = userService;
-            _userContextService = userContextService;
             _mapper = mapper;
         }
+
+        private int GetUserIdFromToken()
+        {
+            var userIdClaim = User.FindFirst("sub")?.Value;
+            return int.TryParse(userIdClaim, out var id) ? id : 0;
+        }
+
+        private string GetUserRole()
+        {
+            return User.FindFirst(ClaimTypes.Role)?.Value ?? string.Empty;
+        }
+
 
         [HttpPut]
         [Authorize(Roles = "Admin, User, Security")]
         public async Task<IActionResult> UpdateUser([FromBody] UserForUpdateDTO dto)
         {
-            var userId = _userContextService.GetUserId();
             try
             {
-                var updatedUser = await _userService.UpdateUserAsync(dto, userId);
+                var updatedUser = await _userService.UpdateUserAsync(dto, GetUserIdFromToken());
                 if (updatedUser == null)
                 {
                     return NotFound("User not found.");
@@ -52,7 +63,6 @@ namespace aoristo_aqualina_app.Controllers
         [Authorize(Roles = "Admin, User, Security")]
         public async Task<IActionResult> DeleteUser(int id)
         {
-            var userId = _userContextService.GetUserId();
             try
             {
                 var user = await _userService.GetByIdAsync(id);
@@ -61,7 +71,7 @@ namespace aoristo_aqualina_app.Controllers
                     return NotFound("User not found.");
                 }
 
-                if (user.Id != userId && _userContextService.GetUserRole() != "Admin")
+                if (user.Id != GetUserIdFromToken() && GetUserRole() != "Admin")
                 {
                     return Forbid("You do not have permission to delete this user.");
                 }
@@ -78,10 +88,9 @@ namespace aoristo_aqualina_app.Controllers
         [Authorize(Roles = "Admin, User, Security")]
         public async Task<IActionResult> DeleteCurrentUser()
         {
-            var userId = _userContextService.GetUserId();
             try
             {
-                await _userService.DeleteUserAsync(userId);
+                await _userService.DeleteUserAsync(GetUserIdFromToken());
                 return Ok();
             }
             catch (Exception ex)
@@ -93,7 +102,6 @@ namespace aoristo_aqualina_app.Controllers
         [Authorize(Roles = "Admin, User, Security")]
         public async Task<IActionResult> GetUser(int id)
         {
-            var userId = _userContextService.GetUserId();
             try
             {
                 var user = await _userService.GetByIdAsync(id);
@@ -102,7 +110,7 @@ namespace aoristo_aqualina_app.Controllers
                     return NotFound("User not found.");
                 }
 
-                if (user.Id != userId && _userContextService.GetUserRole() != "Admin")
+                if (user.Id != GetUserIdFromToken() && GetUserRole() != "Admin")
                 {
                     return Forbid("You do not have permission to view this user.");
                 }
@@ -119,11 +127,9 @@ namespace aoristo_aqualina_app.Controllers
         [Authorize(Roles = "Admin, User, Security")]
         public async Task<IActionResult> GetCurrentUser()
         {
-            var userId = User.FindFirst("sub")?.Value;
-            int.TryParse(userId, out var id);
             try
             {
-                var user = await _userService.GetByIdAsync(id);
+                var user = await _userService.GetByIdAsync(GetUserIdFromToken());
                 if (user == null)
                 {
                     return NotFound("User not found.");
