@@ -25,8 +25,7 @@ string jwtSalt = jwtSecret.Value;
 
 
 builder.Services.AddDbContext<AqualinaAPIContext>(options =>
-    options.UseSqlServer(
-        builder.Configuration.GetConnectionString(connectionString)));
+    options.UseSqlServer(connectionString));
 
 builder.Services.AddHttpContextAccessor();
 
