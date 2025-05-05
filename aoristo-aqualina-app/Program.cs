@@ -17,8 +17,8 @@ var builder = WebApplication.CreateBuilder(args);
 var credential = new DefaultAzureCredential();
 var client = new SecretClient(new Uri("https://aoristo-key-vault.vault.azure.net/"), credential);
 
-KeyVaultSecret sqlSecret = await client.GetSecretAsync("SQL‑CONNECTION‑STR");
-KeyVaultSecret jwtSecret = await client.GetSecretAsync("JWT‑Secret‑Key");
+KeyVaultSecret sqlSecret = await client.GetSecretAsync("ConnectionStr");
+KeyVaultSecret jwtSecret = await client.GetSecretAsync("JWTSecret");
 
 string connectionString = sqlSecret.Value;
 string jwtSalt = jwtSecret.Value;
