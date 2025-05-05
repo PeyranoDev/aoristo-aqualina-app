@@ -15,27 +15,35 @@ namespace aoristo_aqualina_app.Controllers
     public class InvitationController : ControllerBase
     {
         private readonly IUserService _userService;
-        private readonly IUserContextService _userContextService;
         private readonly IInvitationService _invitationService;
         private readonly IRoleService _roleService;
 
-        public InvitationController(IUserService userService, 
-            IUserContextService userContextService, 
+        public InvitationController(IUserService userService,  
             IInvitationService invitationService,
             IRoleService roleService
             )
         {
             _userService = userService;
-            _userContextService = userContextService;
             _invitationService = invitationService;
             _roleService = roleService;
+        }
+
+        private int GetUserIdFromToken()
+        {
+            var userIdClaim = User.FindFirst("sub")?.Value;
+            return int.TryParse(userIdClaim, out var id) ? id : 0;
+        }
+
+        private string GetUserRole()
+        {
+            return User.FindFirst(ClaimTypes.Role)?.Value ?? string.Empty;
         }
 
         [HttpPost]
         [Authorize(Roles = "Admin, User")]
         public async Task<IActionResult> CreateInvitation([FromBody] CreateInvitationDto dto)
         {
-            var userId = _userContextService.GetUserId();
+            var userId = GetUserIdFromToken();
 
             var roleExists = await _roleService.RoleExistsAsync(dto.RoleId);
             if (!roleExists) return BadRequest("Invalid role");
