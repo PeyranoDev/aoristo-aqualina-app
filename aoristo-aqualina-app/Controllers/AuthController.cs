@@ -1,6 +1,7 @@
 ﻿using Azure.Security.KeyVault.Secrets;
 using Common.Models.Requests;
 using Data.Entities;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
@@ -26,7 +27,7 @@ namespace aoristo_aqualina_app.Controllers
             _jwtOptions = jwtOptions;
         }
 
-        [HttpPut("login")]
+        [HttpPost("login")]
         public async Task<IActionResult> Auth([FromBody] CredentialsDTO dto)
         {
             User? user = await _userService.ValidateAsync(dto);
@@ -59,6 +60,7 @@ namespace aoristo_aqualina_app.Controllers
         }
 
         [HttpPost("register")]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> Register([FromBody] UserForCreateDTO dto)
         {
             if (await _userService.EmailExistsAsync(dto.Email))
