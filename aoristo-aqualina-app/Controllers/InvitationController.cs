@@ -12,7 +12,7 @@ namespace aoristo_aqualina_app.Controllers
 {
     [Route("invitation")]
     [ApiController]
-    public class InvitationController : ControllerBase
+    public class InvitationController : MainController
     {
         private readonly IUserService _userService;
         private readonly IInvitationService _invitationService;
@@ -27,18 +27,6 @@ namespace aoristo_aqualina_app.Controllers
             _invitationService = invitationService;
             _roleService = roleService;
         }
-
-        private int GetUserIdFromToken()
-        {
-            var userIdClaim = User.FindFirstValue(ClaimTypes.NameIdentifier);
-            return int.TryParse(userIdClaim, out var id) ? id : 0;
-        }
-
-        private string GetUserRole()
-        {
-            return User.FindFirstValue(ClaimTypes.Role) ?? string.Empty;
-        }
-
         [HttpPost]
         [Authorize(Roles = "Admin")]
         public async Task<IActionResult> CreateInvitation([FromBody] CreateInvitationDto dto)
