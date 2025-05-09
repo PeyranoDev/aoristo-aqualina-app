@@ -17,7 +17,7 @@ namespace aoristo_aqualina_app.Controllers
 
     [Route("user")]
     [ApiController]
-    public class UserController : ControllerBase
+    public class UserController : MainController
     {
         private readonly IUserService _userService;
         private readonly IMapper _mapper;
@@ -26,17 +26,6 @@ namespace aoristo_aqualina_app.Controllers
         {
             _userService = userService;
             _mapper = mapper;
-        }
-
-        private int GetUserIdFromToken()
-        {
-            var userIdClaim = User.FindFirstValue(ClaimTypes.NameIdentifier);
-            return int.TryParse(userIdClaim, out var id) ? id : 0;
-        }
-
-        private string GetUserRole()
-        {
-            return User.FindFirstValue(ClaimTypes.Role) ?? string.Empty;
         }
 
 
