@@ -26,7 +26,7 @@ namespace aoristo_aqualina_app.Controllers
             _jwtOptions = jwtOptions;
         }
 
-        [HttpPut("login")]
+        [HttpPost("login")]
         public async Task<IActionResult> Auth([FromBody] CredentialsDTO dto)
         {
             User? user = await _userService.ValidateAsync(dto);
