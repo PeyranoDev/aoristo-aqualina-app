@@ -27,6 +27,7 @@ namespace Data
         public DbSet<Request> Requests { get; set; }
         public DbSet<News> News { get; set; }
         public DbSet<Invitation> Invitations { get; set; }
+        public DbSet<NotificationToken> NotificationTokens { get; set; }
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             modelBuilder.Entity<User>()
