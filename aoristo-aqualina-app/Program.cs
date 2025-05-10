@@ -91,10 +91,21 @@ builder.Services.AddSwaggerGen(c =>
     });
 });
 
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowAll", policy =>
+    {
+        policy
+            .AllowAnyOrigin()
+            .AllowAnyMethod()
+            .AllowAnyHeader();
+    });
+});
+
 
 var app = builder.Build();
 
-
+app.UseCors("AllowAll");
 app.UseExceptionHandler("/error"); 
 app.UseHttpsRedirection();
 app.UseRouting();
