@@ -7,5 +7,6 @@ namespace Data.Repositories.Interfaces
         Task<bool> AddNotificationTokenAsync(NotificationToken token);
         Task<NotificationToken?> GetNotificationTokenByTokenAsync(string token);
         Task<bool> UpdateNotificationTokenAsync(NotificationToken token);
+        Task<NotificationToken?> GetLatestTokenByUserIdAsync(int userId);
     }
 }

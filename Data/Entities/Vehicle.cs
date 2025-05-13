@@ -13,6 +13,8 @@ namespace Data.Entities
         public string Model { get; set; }
         public string Color { get; set; }
         public bool IsParked { get; set; }
+        public int OwnerId { get; set; }
+        public User Owner { get; set; }
 
         public ICollection<Request>? Requests { get; set; }
     }

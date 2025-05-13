@@ -10,6 +10,7 @@ namespace Data.Enum
     {
         Pending,      
         InPreparation, 
+        AlmostReady,
         Ready,         
         Cancelled,
         Completed      

@@ -13,9 +13,10 @@ using Services.Main.Interfaces;
 using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
+var uriKeyVault = "https://aoristo-key-vault.vault.azure.net/";
 
 var credential = new DefaultAzureCredential();
-var client = new SecretClient(new Uri("https://aoristo-key-vault.vault.azure.net/"), credential);
+var client = new SecretClient(new Uri(uriKeyVault), credential);
 
 KeyVaultSecret sqlSecret = await client.GetSecretAsync("ConnectionStr");
 KeyVaultSecret jwtSecret = await client.GetSecretAsync("JWTSecret");
@@ -29,6 +30,10 @@ var jwtOptions = new JwtOptions
     Issuer = builder.Configuration["Jwt:Issuer"],
     Audience = builder.Configuration["Jwt:Audience"]
 };
+
+await FirebaseInitializer.InitializeAsync(uriKeyVault, "FirebaseServiceAccount");
+
+builder.Services.AddSingleton<INotificationService, NotificationService>();
 
 builder.Services.AddSingleton(jwtOptions);
 

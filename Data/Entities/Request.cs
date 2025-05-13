@@ -19,6 +19,7 @@ namespace Data.Entities
         public VehicleRequestStatusEnum Status { get; set; } 
 
         public DateTime RequestedAt { get; set; }
+        public DateTime UpdatedAt { get; set; } 
         public DateTime? CompletedAt { get; set; }
 
         public int RequestedById { get; set; }

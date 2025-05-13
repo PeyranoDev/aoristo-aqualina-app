@@ -18,4 +18,5 @@ public class User
     public ICollection<Reservation>? Reservations { get; set; }
     public ICollection<Vehicle>? OwnedCars { get; set; }
     public ICollection<NotificationToken>? NotificationTokens { get; set; }
+    public bool? IsOnDuty { get; set; } = false;
 }

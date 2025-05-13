@@ -1,4 +1,5 @@
 ﻿using Data.Entities;
+using Data.Enum;
 using Data.Repositories.Interfaces;
 using Microsoft.EntityFrameworkCore;
 using System;
@@ -76,6 +77,23 @@ namespace Data.Repositories.Implementations
                 .Include(u => u.Role)
                 .Include(u => u.Apartment)
                 .AsQueryable();
+        }
+
+        public async Task<IList<User>> GetAllSecurityAsync()
+        {
+            return await _context.Users
+                .Include(u => u.Role)
+                .Include(u => u.Apartment)
+                .Where(u => u.Role.Type == UserRoleEnum.Security)
+                .ToListAsync();
+        }
+
+        public async Task<List<User>> GetAllOnDutySecurityAsync()
+        {
+            return await _context.Users
+                .Include(u => u.Role)
+                .Where(u => u.Role.Type == UserRoleEnum.Security && u.IsOnDuty == true)
+                .ToListAsync();
         }
     }
 }
