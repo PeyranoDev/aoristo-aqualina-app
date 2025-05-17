@@ -12,7 +12,7 @@ using System.Threading.Tasks;
 
 namespace Services.Main.Implementations
 {
-    public class VehicleRequestService
+    public class VehicleRequestService : IVehicleRequestService
     {
         private readonly IRequestRepository _requestRepository;
         private readonly IVehicleRepository _vehicleRepository;

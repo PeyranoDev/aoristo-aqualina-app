@@ -52,7 +52,7 @@ builder.Services.AddScoped<IRoleService, RoleService>();
 builder.Services.AddSingleton<IHashingService, HashingService>();
 builder.Services.AddScoped<ITokenRepository, TokenRepository>();
 builder.Services.AddScoped<ITokenService, TokenService>();
-builder.Services.AddAutoMapper(typeof(UserProfile));
+builder.Services.AddAutoMapper(typeof(UserProfile), typeof(VehicleProfile));
 
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>

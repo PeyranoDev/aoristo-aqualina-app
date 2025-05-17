@@ -23,11 +23,6 @@ namespace Data.Repositories.Implementations
                 .Include(Vehicle => Vehicle.Requests)
                 .FirstOrDefaultAsync(v => v.Id == id);
         }
-        public async Task<List<Vehicle>> GetAllWithoutRequestsAsync()
-        {
-            return await _context.Vehicles
-                .ToListAsync();
-        }
         public async Task<bool> AddAsync(Vehicle vehicle)
         {
             try
@@ -36,7 +31,7 @@ namespace Data.Repositories.Implementations
                 await _context.SaveChangesAsync();
                 return true;
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 return false;
             }
@@ -50,11 +45,22 @@ namespace Data.Repositories.Implementations
                 await _context.SaveChangesAsync();
                 return true;
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 return false;
             }
         }
 
+        public IQueryable<Vehicle> GetAll()
+        {
+            return _context.Vehicles.AsNoTracking();
+        }
+
+        public async Task<IList<Vehicle>> GetVehiclesPerUserIdAsync(int userId)
+        {
+            return await _context.Vehicles
+                .Where(v => v.OwnerId == userId)
+                .ToListAsync();
+        }
     }
 }
