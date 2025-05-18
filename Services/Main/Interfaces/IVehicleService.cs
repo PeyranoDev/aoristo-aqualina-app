@@ -10,5 +10,9 @@ namespace Services.Main.Interfaces
         Task<bool> DeleteVehicleAsync(int vehicleId);
         Task<IList<Vehicle>> GetVehiclesPerUserIdAsync(int userId);
         Task<PagedResponse<VehicleForResponseDTO>> GetVehiclesPagedAsync(VehicleFilterParams filters, PaginationParams pagination);
+        Task<bool> HasActiveRequestAsync(int vehicleId);
+        Task<Request?> GetLastActiveRequestAsync(int vehicleId);
+        Task<IList<Vehicle>> GetVehiclesPerUserIdWithLastRequestAsync(int userId);
+        Task<IList<Vehicle>> GetVehiclesWithActiveRequestsAsync();
     }
 }

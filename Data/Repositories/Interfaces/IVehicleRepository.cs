@@ -9,5 +9,9 @@ namespace Data.Repositories.Interfaces
         Task<bool> UpdateAsync(Vehicle vehicle);
         IQueryable<Vehicle> GetAll();
         Task<IList<Vehicle>> GetVehiclesPerUserIdAsync(int userId);
+        Task<bool> HasActiveRequestAsync(int vehicleId);
+        Task<Request?> GetLastActiveRequestAsync(int vehicleId);
+        Task<IList<Vehicle>> GetVehiclesPerUserIdWithLastRequestAsync(int userId);
+        Task<IList<Vehicle>> GetVehiclesWithActiveRequestsAsync();
     }
 }

@@ -12,15 +12,15 @@ namespace aoristo_aqualina_app.Controllers
     {
         private readonly IVehicleRequestService _vehicleRequestService;
         private readonly IVehicleService _vehicleService;
-        public VehicleController(IVehicleRequestService vehicleRequestService, IVehicleService vehicleService) 
-        { 
+        public VehicleController(IVehicleRequestService vehicleRequestService, IVehicleService vehicleService)
+        {
             _vehicleRequestService = vehicleRequestService;
             _vehicleService = vehicleService;
         }
 
         [HttpGet]
         [Authorize]
-        public async Task<IActionResult> GetSelfVehicles() 
+        public async Task<IActionResult> GetSelfVehicles()
         {
             var userId = GetUserIdFromToken();
 
@@ -33,19 +33,52 @@ namespace aoristo_aqualina_app.Controllers
             return Ok(vehicles);
         }
 
-        [HttpGet]
-        [Route("/security/get")]
-        [Authorize(Roles ="Admin, Security")]
+        [HttpDelete("{vehicleId}")]
+        [Authorize]
+        public async Task<IActionResult> DeleteVehicle(int vehicleId)
+        {
+            var userId = GetUserIdFromToken();
+            var role = GetUserRole();
+
+            var vehicle = await _vehicleService.GetByIdAsync(vehicleId);
+
+            if (vehicle == null)
+            {
+                return NotFound("Vehicle not found");
+            }
+
+            var isAdmin = role == "Admin";
+
+            if (!isAdmin && vehicle.OwnerId != userId)
+            {
+                return BadRequest("You are not authorized to delete this vehicle");
+            }
+
+            if (await _vehicleService.HasActiveRequestAsync(vehicleId))
+            {
+                return BadRequest("Cannot delete vehicle with active requests");
+            }
+
+            var result = await _vehicleService.DeleteVehicleAsync(vehicleId);
+
+            if (!result)
+            {
+                return BadRequest("Failed to delete vehicle");
+            }
+
+            return Ok("Vehicle deleted successfully");
+        }
+
+        [HttpGet("security/active-requests")]
+        [Authorize(Roles = "Admin,Security")]
 
         public async Task<IActionResult> GetVehiclesForSecurity()
         {
-            var vehicles = await _vehicleService.GetVehiclesWithoutRequestsAsync();
+            var vehicles = await _vehicleService.GetVehiclesWithActiveRequestsAsync();
             return Ok(vehicles);
-
         }
 
-        [HttpGet]
-        [Route("/admin/get")]
+        [HttpGet("/admin/get")]
         [Authorize(Roles="Admin")]
 
         public async Task<IActionResult> GetVehiclesForAdmins([FromQuery] VehicleFilterParams filters,

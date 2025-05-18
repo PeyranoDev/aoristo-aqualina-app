@@ -65,5 +65,24 @@ namespace Services.Main.Implementations
             if (await _vehicleRepository.UpdateAsync(vehicle)) { return true; }
             else { return false; }
         }
+
+        public async Task<bool> HasActiveRequestAsync(int vehicleId)
+        {
+            return await _vehicleRepository.HasActiveRequestAsync(vehicleId);
+        }
+
+        public async Task<Request?> GetLastActiveRequestAsync(int vehicleId)
+        {
+            return await _vehicleRepository.GetLastActiveRequestAsync(vehicleId);
+        }
+
+        public async Task<IList<Vehicle>> GetVehiclesPerUserIdWithLastRequestAsync(int userId)
+        {
+            return await _vehicleRepository.GetVehiclesPerUserIdWithLastRequestAsync(userId);
+        }
+        public async Task<IList<Vehicle>> GetVehiclesWithActiveRequestsAsync()
+        {
+            return await _vehicleRepository.GetVehiclesWithActiveRequestsAsync();
+        }
     }
 }
