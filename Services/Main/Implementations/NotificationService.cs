@@ -228,6 +228,44 @@ namespace Services.Main.Implementations
             };
             await FirebaseMessaging.DefaultInstance.SendAsync(message);
         }
+        public async Task SendVehicleCancelledNotificationForUser(int vehicleId)
+        {
+            var vehicle = await _vehicleRepository.GetByIdAsync(vehicleId);
+
+            var userId = vehicle.OwnerId;
+            var vehicleModel = vehicle.Model;
+
+            var tokenEntity = await _tokenRepository.GetLatestTokenByUserIdAsync(userId);
+            try
+            {
+                ValidateToken(tokenEntity);
+            }
+            catch (Exception ex)
+            {
+                throw new Exception("Error en las validaciones: " + ex.Message);
+            }
+
+            var userName = tokenEntity.User.Name;
+
+            var title = $"{userName}, tu {vehicleModel} ha sido cancelado!";
+            var body = $"Hola {userName}! Tu pedido para el vehiculo {vehicleModel} ha sido cancelado, ¡Haz click para ver maas informacion! .";
+
+            var message = new Message
+            {
+                Token = tokenEntity.Token,
+                Notification = new Notification
+                {
+                    Title = title,
+                    Body = body
+                },
+                Data = new Dictionary<string, string>
+                {
+                    { "type", "vehicle_cancelled" },
+                    { "vehicleModel", vehicleModel }
+                }
+            };
+            await FirebaseMessaging.DefaultInstance.SendAsync(message);
+        }
     }
 }
    

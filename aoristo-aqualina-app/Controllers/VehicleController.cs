@@ -40,7 +40,7 @@ namespace aoristo_aqualina_app.Controllers
             var userId = GetUserIdFromToken();
             var role = GetUserRole();
 
-            var vehicle = await _vehicleService.GetByIdAsync(vehicleId);
+            var vehicle = await _vehicleService.GetVehicleByIdAsync(vehicleId);
 
             if (vehicle == null)
             {

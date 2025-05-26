@@ -1,7 +1,7 @@
 ﻿using Azure.Identity;
 using Azure.Security.KeyVault.Secrets;
 using Data;
-
+using Data.Models.Profiles;
 using Data.Repositories.Implementations;
 using Data.Repositories.Interfaces;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -33,8 +33,6 @@ var jwtOptions = new JwtOptions
 
 await FirebaseInitializer.InitializeAsync(uriKeyVault, "FirebaseServiceAccount");
 
-builder.Services.AddSingleton<INotificationService, NotificationService>();
-
 builder.Services.AddSingleton(jwtOptions);
 
 builder.Services.AddDbContext<AqualinaAPIContext>(options =>
@@ -42,6 +40,7 @@ builder.Services.AddDbContext<AqualinaAPIContext>(options =>
 
 builder.Services.AddHttpContextAccessor();
 
+builder.Services.AddScoped<INotificationService, NotificationService>();
 builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<IApartmentRepository, ApartmentRepository>();
@@ -52,6 +51,10 @@ builder.Services.AddScoped<IRoleService, RoleService>();
 builder.Services.AddSingleton<IHashingService, HashingService>();
 builder.Services.AddScoped<ITokenRepository, TokenRepository>();
 builder.Services.AddScoped<ITokenService, TokenService>();
+builder.Services.AddScoped<IVehicleService, VehicleService>();
+builder.Services.AddScoped<IVehicleRepository, VehicleRepository>();
+builder.Services.AddScoped<IVehicleRequestService, VehicleRequestService>();
+builder.Services.AddScoped<IRequestRepository, RequestRepository>();
 builder.Services.AddAutoMapper(typeof(UserProfile), typeof(VehicleProfile));
 
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)

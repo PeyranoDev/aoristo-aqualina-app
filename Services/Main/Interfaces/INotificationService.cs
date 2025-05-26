@@ -35,5 +35,8 @@ namespace Services.Main.Interfaces
         /// <returns>Tarea asíncrona.</returns>
         /// <exception cref="Exception">Si no se encuentra el token o el usuario asociado.</exception>
         Task SendVehicleAlmostReadyNotificationForUser(int vehicleId);
+
+
+        Task SendVehicleCancelledNotificationForUser(int vehicleId);
     }
 }

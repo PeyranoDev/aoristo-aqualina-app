@@ -27,7 +27,7 @@ namespace Services.Main.Implementations
             return await _vehicleRepository.GetVehiclesPerUserIdAsync(userId);
         }
 
-        public async Task<PagedResponse<VehicleForResponseDTO>> GetVehiclesPagedAsync(VehicleFilterParams filters,PaginationParams pagination)
+        public async Task<PagedResponse<VehicleForResponseDTO>> GetVehiclesPagedAsync(VehicleFilterParams filters, PaginationParams pagination)
         {
             var query = _vehicleRepository.GetAll();
 
@@ -83,6 +83,10 @@ namespace Services.Main.Implementations
         public async Task<IList<Vehicle>> GetVehiclesWithActiveRequestsAsync()
         {
             return await _vehicleRepository.GetVehiclesWithActiveRequestsAsync();
+        }
+        public async Task<Vehicle?> GetVehicleByIdAsync(int vehicleId)
+        {
+            return await _vehicleRepository.GetByIdAsync(vehicleId);
         }
     }
 }
