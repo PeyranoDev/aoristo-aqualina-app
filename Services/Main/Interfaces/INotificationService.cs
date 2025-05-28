@@ -36,7 +36,12 @@ namespace Services.Main.Interfaces
         /// <exception cref="Exception">Si no se encuentra el token o el usuario asociado.</exception>
         Task SendVehicleAlmostReadyNotificationForUser(int vehicleId);
 
-
+        /// <summary>
+        /// Envia una notificación al propietario del vehículo indicando que la solicitud ha sido cancelada.
+        /// </summary>
+        /// <param name="vehicleId"> ID del vehiculo que ha sido cancelado. </param>
+        /// <returns> Tarea asincrona. </returns>
+        /// <exception cref="Exception"> Si no se encuentra el token o el usuario asociado. </exception>
         Task SendVehicleCancelledNotificationForUser(int vehicleId);
     }
 }

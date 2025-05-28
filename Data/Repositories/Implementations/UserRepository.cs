@@ -30,6 +30,7 @@ namespace Data.Repositories.Implementations
         {
             return await _context.Users
                 .Include(u => u.Apartment)
+                .Include(u => u.Role)
                 .FirstOrDefaultAsync(u => u.Id == id);
         }
 
