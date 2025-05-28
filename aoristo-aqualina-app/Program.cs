@@ -1,7 +1,7 @@
 ﻿using Azure.Identity;
 using Azure.Security.KeyVault.Secrets;
 using Data;
-
+using Data.Models.Profiles;
 using Data.Repositories.Implementations;
 using Data.Repositories.Interfaces;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -13,9 +13,10 @@ using Services.Main.Interfaces;
 using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
+var uriKeyVault = "https://aoristo-key-vault.vault.azure.net/";
 
 var credential = new DefaultAzureCredential();
-var client = new SecretClient(new Uri("https://aoristo-key-vault.vault.azure.net/"), credential);
+var client = new SecretClient(new Uri(uriKeyVault), credential);
 
 KeyVaultSecret sqlSecret = await client.GetSecretAsync("ConnectionStr");
 KeyVaultSecret jwtSecret = await client.GetSecretAsync("JWTSecret");
@@ -30,6 +31,8 @@ var jwtOptions = new JwtOptions
     Audience = builder.Configuration["Jwt:Audience"]
 };
 
+await FirebaseInitializer.InitializeAsync(uriKeyVault, "FirebaseServiceAccount");
+
 builder.Services.AddSingleton(jwtOptions);
 
 builder.Services.AddDbContext<AqualinaAPIContext>(options =>
@@ -37,6 +40,7 @@ builder.Services.AddDbContext<AqualinaAPIContext>(options =>
 
 builder.Services.AddHttpContextAccessor();
 
+builder.Services.AddScoped<INotificationService, NotificationService>();
 builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<IApartmentRepository, ApartmentRepository>();
@@ -47,7 +51,11 @@ builder.Services.AddScoped<IRoleService, RoleService>();
 builder.Services.AddSingleton<IHashingService, HashingService>();
 builder.Services.AddScoped<ITokenRepository, TokenRepository>();
 builder.Services.AddScoped<ITokenService, TokenService>();
-builder.Services.AddAutoMapper(typeof(UserProfile));
+builder.Services.AddScoped<IVehicleService, VehicleService>();
+builder.Services.AddScoped<IVehicleRepository, VehicleRepository>();
+builder.Services.AddScoped<IVehicleRequestService, VehicleRequestService>();
+builder.Services.AddScoped<IRequestRepository, RequestRepository>();
+builder.Services.AddAutoMapper(typeof(UserProfile), typeof(VehicleProfile));
 
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>

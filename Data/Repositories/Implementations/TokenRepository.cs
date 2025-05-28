@@ -50,5 +50,12 @@ namespace Data.Repositories.Implementations
             return await _context.NotificationTokens
                 .FirstOrDefaultAsync(t => t.Token == token);
         }
+
+        public async Task<NotificationToken?> GetLatestTokenByUserIdAsync(int userId)
+        {
+            return await _context.NotificationTokens
+                .OrderByDescending(t => t.CreatedAt)
+                .FirstOrDefaultAsync(t => t.UserId == userId);
+        }
     }
 }
