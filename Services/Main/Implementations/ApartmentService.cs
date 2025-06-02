@@ -1,6 +1,7 @@
 ﻿using Common.Models.Requests;
 using Data.Entities;
 using Data.Repositories.Interfaces;
+using Services.Main.Interfaces;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -9,7 +10,7 @@ using System.Threading.Tasks;
 
 namespace Services.Main.Implementations
 {
-    public class ApartmentService
+    public class ApartmentService : IApartmentService
     {
         private readonly IApartmentRepository _apartmentRepository;
 
