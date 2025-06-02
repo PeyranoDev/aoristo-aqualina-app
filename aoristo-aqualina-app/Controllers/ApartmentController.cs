@@ -3,6 +3,7 @@ using Data.Entities;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Services.Main.Implementations;
+using Services.Main.Interfaces;
 
 namespace aoristo_aqualina_app.Controllers
 {
@@ -10,7 +11,7 @@ namespace aoristo_aqualina_app.Controllers
     [ApiController]
     public class ApartmentController : ControllerBase
     {
-        private readonly ApartmentService _apartmentService;
+        private readonly IApartmentService _apartmentService;
         public ApartmentController(ApartmentService apartmentService)
         {
             _apartmentService = apartmentService;
