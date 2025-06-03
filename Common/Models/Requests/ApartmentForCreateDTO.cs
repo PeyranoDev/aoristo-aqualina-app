@@ -9,6 +9,5 @@ namespace Common.Models.Requests
     public class ApartmentForCreateDTO
     {
         public string Identifier { get; set; } = string.Empty;
-        public bool? IsActive { get; set; }
     }
 }
