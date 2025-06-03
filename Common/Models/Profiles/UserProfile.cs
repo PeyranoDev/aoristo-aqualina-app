@@ -22,5 +22,7 @@ public class UserProfile : Profile
             .ForMember(dest => dest.PasswordHash, opt => opt.Ignore())
             .ForMember(dest => dest.Role, opt => opt.Ignore())
             .ForMember(dest => dest.Apartment, opt => opt.Ignore());
+
+        CreateMap<UserForUpdateDTO, User>();
     }
 }
