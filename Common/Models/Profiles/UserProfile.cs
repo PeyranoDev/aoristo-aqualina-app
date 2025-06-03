@@ -23,6 +23,15 @@ public class UserProfile : Profile
             .ForMember(dest => dest.Role, opt => opt.Ignore())
             .ForMember(dest => dest.Apartment, opt => opt.Ignore());
 
-        CreateMap<UserForUpdateDTO, User>();
+        CreateMap<UserForUpdateDTO, User>()
+        .ForMember(dest => dest.PasswordHash, opt => opt.Ignore())
+        .ForMember(dest => dest.Role, opt => opt.Ignore())
+        .ForMember(dest => dest.Apartment, opt => opt.Ignore())
+        .ForMember(dest => dest.ApartmentId, opt => opt.MapFrom(src => src.Apartment_Id))
+        .ForMember(dest => dest.Phone, opt => opt.MapFrom(src => src.Phone_Number))
+        .ForAllMembers(opt =>
+            opt.Condition((src, dest, srcMember) => srcMember != null))
+        ;
+
     }
 }
