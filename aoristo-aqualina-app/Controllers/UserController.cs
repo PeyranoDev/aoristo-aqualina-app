@@ -1,6 +1,7 @@
 ﻿using AutoMapper;
 using Common.Models;
 using Common.Models.Requests;
+using Common.Models.Responses;
 using Common.Models.Responses.Common.Models.Responses;
 using Data.Entities;
 using Microsoft.AspNetCore.Authorization;
@@ -13,8 +14,6 @@ using System.Text;
 
 namespace aoristo_aqualina_app.Controllers
 {
-
-
     [Route("user")]
     [ApiController]
     public class UserController : MainController
@@ -28,7 +27,6 @@ namespace aoristo_aqualina_app.Controllers
             _mapper = mapper;
         }
 
-
         [HttpPut]
         [Authorize(Roles = "Admin, User, Security")]
         public async Task<IActionResult> UpdateUser([FromBody] UserForUpdateDTO dto)
@@ -38,13 +36,13 @@ namespace aoristo_aqualina_app.Controllers
                 var updatedUser = await _userService.UpdateUserAsync(dto, GetUserIdFromToken());
                 if (updatedUser == null)
                 {
-                    return NotFound("User not found.");
+                    return BadRequest(ApiResponse<object>.Fail("User not found or you do not have permission to update this user."));
                 }
-                return Ok();
+                return Ok(ApiResponse<object>.NoContent("User updated successfully"));
             }
             catch (Exception ex)
             {
-                return StatusCode(500, $"Internal server error: {ex.Message}");
+                return StatusCode(500, ApiResponse<object>.FromException(ex, "There was an internal server error"));
             }
         }
 
@@ -57,22 +55,23 @@ namespace aoristo_aqualina_app.Controllers
                 var user = await _userService.GetByIdAsync(id);
                 if (user == null)
                 {
-                    return NotFound("User not found.");
+                    return NotFound(ApiResponse<object>.NotFound($"User with id: {id}, not found"));
                 }
 
                 if (user.Id != GetUserIdFromToken() && GetUserRole() != "Admin")
                 {
-                    return Forbid("You do not have permission to delete this user.");
+                    return Forbid(ApiResponse<object>.Unauthorized("You do not have permission to delete this user"));
                 }
 
                 await _userService.DeleteUserAsync(id);
-                return Ok();
+                return Ok(ApiResponse<object>.NoContent("User deleted successfully"));
             }
             catch (Exception ex)
             {
-                return StatusCode(500, $"Internal server error: {ex.Message}");
+                return StatusCode(500, ApiResponse<object>.FromException(ex, "There was an internal server error"));
             }
         }
+
         [HttpDelete]
         [Authorize(Roles = "Admin, User, Security")]
         public async Task<IActionResult> DeleteCurrentUser()
@@ -80,13 +79,14 @@ namespace aoristo_aqualina_app.Controllers
             try
             {
                 await _userService.DeleteUserAsync(GetUserIdFromToken());
-                return Ok();
+                return Ok(ApiResponse<object>.NoContent("User deleted successfully"));
             }
             catch (Exception ex)
             {
-                return StatusCode(500, $"Internal server error: {ex.Message}");
+                return StatusCode(500, ApiResponse<object>.FromException(ex, "There was an internal server error"));
             }
         }
+
         [HttpGet("{id}")]
         [Authorize(Roles = "Admin, User, Security")]
         public async Task<IActionResult> GetUser(int id)
@@ -96,22 +96,23 @@ namespace aoristo_aqualina_app.Controllers
                 var user = await _userService.GetByIdAsync(id);
                 if (user == null)
                 {
-                    return NotFound("User not found.");
+                    return NotFound(ApiResponse<object>.NotFound($"User with id: {id} not found"));
                 }
 
                 if (user.Id != GetUserIdFromToken() && GetUserRole() != "Admin")
                 {
-                    return Forbid("You do not have permission to view this user.");
+                    return Forbid(ApiResponse<object>.Unauthorized("You do not have permission to view this user"));
                 }
 
                 var response = _mapper.Map<UserForResponse>(user);
-                return Ok(response);
+                return Ok(ApiResponse<UserForResponse>.Ok(response));
             }
             catch (Exception ex)
             {
-                return StatusCode(500, $"Internal server error: {ex.Message}");
+                return StatusCode(500, ApiResponse<object>.FromException(ex, "Internal server error"));
             }
         }
+
         [HttpGet]
         [Authorize(Roles = "Admin, User, Security")]
         public async Task<IActionResult> GetCurrentUser()
@@ -121,23 +122,30 @@ namespace aoristo_aqualina_app.Controllers
                 var user = await _userService.GetByIdAsync(GetUserIdFromToken());
                 if (user == null)
                 {
-                    return NotFound("User not found.");
+                    return NotFound(ApiResponse<object>.NotFound("User not found"));
                 }
                 var response = _mapper.Map<UserForResponse>(user);
-                return Ok(response);
+                return Ok(ApiResponse<UserForResponse>.Ok(response));
             }
             catch (Exception ex)
             {
-                return StatusCode(500, $"Internal server error: {ex.Message}");
+                return StatusCode(500, ApiResponse<object>.FromException(ex, "Internal server error"));
             }
         }
+
         [HttpGet("all")]
         [Authorize(Roles = "Admin")]
-        public async Task<ActionResult<PagedResponse<UserForResponse>>> GetUsers([FromQuery] PaginationParams pagination,[FromQuery] UserFilterParams filters)
+        public async Task<ActionResult<PagedResponse<UserForResponse>>> GetUsers([FromQuery] PaginationParams pagination, [FromQuery] UserFilterParams filters)
         {
-            var response = await _userService.GetUsersPagedAsync(filters, pagination);
-            return Ok(response);
+            try
+            {
+                var response = await _userService.GetUsersPagedAsync(filters, pagination);
+                return Ok(ApiResponse<PagedResponse<UserForResponse>>.Ok(response, "Users fetched successfully"));
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, ApiResponse<object>.FromException(ex, "Internal server error"));
+            }
         }
     }
 }
-

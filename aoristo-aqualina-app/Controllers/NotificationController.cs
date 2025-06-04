@@ -1,4 +1,5 @@
 ﻿using Common.Models.Requests;
+using Common.Models.Responses;
 using FirebaseAdmin.Messaging;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -25,14 +26,14 @@ namespace aoristo_aqualina_app.Controllers
         {
             if (string.IsNullOrEmpty(dto.Token))
             {
-                return BadRequest("Token cannot be null or empty.");
+                return BadRequest(ApiResponse<object>.Fail("Error, el token no puede ser nulo"));
             }
 
             var success = await _tokenService.AddNotificationTokenAsync(dto, GetUserIdFromToken());
 
             if (success)
             {
-                return Ok("Token registered successfully.");
+                return Ok(ApiResponse<object>.Ok("Token registered successfully."));
             }
             else
             {

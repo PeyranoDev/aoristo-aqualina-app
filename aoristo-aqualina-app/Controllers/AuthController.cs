@@ -1,5 +1,7 @@
 ﻿using Azure.Security.KeyVault.Secrets;
+using Common.Models;
 using Common.Models.Requests;
+using Common.Models.Responses;
 using Data.Entities;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -56,7 +58,8 @@ namespace aoristo_aqualina_app.Controllers
 
             var jwt = new JwtSecurityTokenHandler().WriteToken(tokenDescriptor);
 
-            return Ok(new { AccessToken = jwt });
+            var response = new AuthResponseDto { AccessToken = jwt };
+            return Ok(ApiResponse<AuthResponseDto>.Ok(response, "Login successful."));
         }
 
         [HttpPost("register")]
@@ -69,7 +72,7 @@ namespace aoristo_aqualina_app.Controllers
                 return BadRequest("Username already exists.");
 
             var userResponse = await _userService.CreateUserAsync(dto);
-            return Ok(userResponse);
+            return Ok(ApiResponse<UserForResponse>.Ok(userResponse, "User registered successfully."));
         }
     }
 }
