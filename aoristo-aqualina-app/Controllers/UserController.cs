@@ -60,7 +60,7 @@ namespace aoristo_aqualina_app.Controllers
 
                 if (user.Id != GetUserIdFromToken() && GetUserRole() != "Admin")
                 {
-                    return Forbid(ApiResponse<object>.Unauthorized("You do not have permission to delete this user"));
+                    return Forbid();
                 }
 
                 await _userService.DeleteUserAsync(id);
@@ -101,7 +101,7 @@ namespace aoristo_aqualina_app.Controllers
 
                 if (user.Id != GetUserIdFromToken() && GetUserRole() != "Admin")
                 {
-                    return Forbid(ApiResponse<object>.Unauthorized("You do not have permission to view this user"));
+                    return Forbid();
                 }
 
                 var response = _mapper.Map<UserForResponse>(user);
