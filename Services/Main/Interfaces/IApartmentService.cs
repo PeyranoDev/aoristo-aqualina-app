@@ -9,5 +9,7 @@ namespace Services.Main.Interfaces
         Task<List<Apartment>> GetAllApartmentsAsync();
         Task<Apartment?> GetApartmentByIdAsync(int id);
         Task<Apartment?> UpdateApartmentAsync(Apartment apartment);
+        Task<byte> DeleteApartmentAsync(int id);
+        Task<Apartment> GetApartmentsByUserIdAsync(int userId);
     }
 }

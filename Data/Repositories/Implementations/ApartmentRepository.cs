@@ -25,7 +25,7 @@ namespace Data.Repositories.Implementations
         public async Task<Apartment?> GetByIdAsync(int id)
         {
             return await _context.Apartments
-                .Include(a => a.Users) // Include related users
+                .Include(a => a.Users) 
                 .FirstOrDefaultAsync(a => a.Id == id);
         }
 

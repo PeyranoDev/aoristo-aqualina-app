@@ -1,4 +1,5 @@
 ﻿using AutoMapper;
+using Common.Exceptions;
 using Common.Helpers;
 using Common.Models;
 using Common.Models.Requests;
@@ -53,7 +54,8 @@ namespace Services.Main.Implementations
             }
 
             var existingUser = await _userRepo.GetByIdAsync(userId);
-            if (existingUser == null) return null;
+            if (existingUser == null)
+                throw new UserNotFoundException(userId);
 
             // Mapeo automático con condiciones
             _mapper.Map(dto, existingUser);
@@ -70,14 +72,16 @@ namespace Services.Main.Implementations
         public async Task<UserForResponse?> GetByIdAsync(int id)
         {
             var user = await _userRepo.GetByIdAsync(id);
-            return user == null ? null : _mapper.Map<UserForResponse>(user);
+            if (user == null)
+                throw new UserNotFoundException(id);
+            return _mapper.Map<UserForResponse>(user);
         }
 
         public async Task<int> DeleteUserAsync(int id)
         {
             var user = await _userRepo.GetByIdAsync(id);
             if (user == null)
-                throw new KeyNotFoundException("User not found.");
+                throw new UserNotFoundException(id);
 
             return await _userRepo.DeleteAsync(user);
         }
@@ -149,26 +153,26 @@ namespace Services.Main.Implementations
         {
             var role = await _roleRepository.GetByIdAsync(roleId);
             if (role == null)
-                throw new ArgumentException("Invalid role specified");
+                throw new InvalidRoleException(roleId);
 
             if (roleId != 0 && roleId != 1 && !apartmentId.HasValue)
-                throw new ArgumentException("Apartment is required for this role");
+                throw new ApartmentRequiredException();
 
             if (apartmentId.HasValue && _apartmentRepo != null)
             {
-                var apartmentExists = await _apartmentRepo.GetByIdAsync(apartmentId.Value) != null;
-                if (!apartmentExists)
-                    throw new ArgumentException("Specified apartment does not exist");
+                var apartment = await _apartmentRepo.GetByIdAsync(apartmentId.Value);
+                if (apartment == null)
+                    throw new ApartmentNotFoundException(apartmentId.Value);
             }
         }
 
         private async Task ValidateEmailAndUsername(string email, string username)
         {
             if (await UsernameExistsAsync(username))
-                throw new ArgumentException("User already registered");
+                throw new UsernameAlreadyExistsException(username);
 
             if (await EmailExistsAsync(email))
-                throw new ArgumentException("Email already registered");
+                throw new EmailAlreadyExistsException(email);
         }
     }
 }

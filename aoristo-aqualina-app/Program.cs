@@ -1,5 +1,6 @@
 ﻿using Azure.Identity;
 using Azure.Security.KeyVault.Secrets;
+using Common.Infrastructure.Security.Middlewares;
 using Data;
 using Data.Models.Profiles;
 using Data.Repositories.Implementations;
@@ -20,6 +21,7 @@ var client = new SecretClient(new Uri(uriKeyVault), credential);
 
 KeyVaultSecret sqlSecret = await client.GetSecretAsync("ConnectionStr");
 KeyVaultSecret jwtSecret = await client.GetSecretAsync("JWTSecret");
+
 
 string connectionString = sqlSecret.Value;
 string jwtSalt = jwtSecret.Value;
@@ -117,15 +119,14 @@ builder.Services.AddCors(options =>
 var app = builder.Build();
 
 app.UseCors("AllowAll");
-app.UseExceptionHandler("/error"); 
 app.UseHttpsRedirection();
 app.UseRouting();
+app.UseMiddleware<ExceptionHandlingMiddleware>();
 app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();
 app.MapHealthChecks("/healthz");
-app.MapGet("/", () => "Aqualina API (Production)");
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();

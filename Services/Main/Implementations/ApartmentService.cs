@@ -1,30 +1,26 @@
-﻿using Common.Models.Requests;
+﻿using Common.Exceptions;
+using Common.Models.Requests;
 using Data.Entities;
 using Data.Repositories.Interfaces;
 using Services.Main.Interfaces;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Services.Main.Implementations
 {
     public class ApartmentService : IApartmentService
     {
         private readonly IApartmentRepository _apartmentRepository;
+        private readonly IUserRepository _userRepository;
 
-        public ApartmentService(IApartmentRepository apartmentRepository)
+        public ApartmentService(IApartmentRepository apartmentRepository, IUserRepository userRepository)
         {
             _apartmentRepository = apartmentRepository;
+            _userRepository = userRepository;
         }
 
         public async Task<Apartment> CreateApartmentAsync(ApartmentForCreateDTO apartment)
         {
             if (await _apartmentRepository.IdentifierExistsAsync(apartment.Identifier))
-            {
-                throw new InvalidOperationException("An apartment with this identifier already exists.");
-            }
+                throw new ApartmentConflictException(apartment.Identifier);
 
             var newApartment = new Apartment
             {
@@ -33,7 +29,6 @@ namespace Services.Main.Implementations
             };
 
             return await _apartmentRepository.CreateAsync(newApartment);
-
         }
 
         public async Task<List<Apartment>> GetAllApartmentsAsync()
@@ -43,24 +38,50 @@ namespace Services.Main.Implementations
 
         public async Task<Apartment?> GetApartmentByIdAsync(int id)
         {
-            return await _apartmentRepository.GetByIdAsync(id);
+            var apartment = await _apartmentRepository.GetByIdAsync(id);
+            if (apartment == null)
+                throw new ApartmentNotFoundException(id);
+
+            return apartment;
         }
+
         public async Task<Apartment?> UpdateApartmentAsync(Apartment apartment)
         {
             if (apartment.Id <= 0)
-            {
-                throw new ArgumentException("Invalid apartment ID.");
-            }
+                throw new BadRequestException("Invalid apartment ID.");
 
             var existingApartment = await _apartmentRepository.GetByIdAsync(apartment.Id);
             if (existingApartment == null)
-            {
-                throw new KeyNotFoundException("Apartment not found.");
-            }
+                throw new ApartmentNotFoundException(apartment.Id);
 
             return await _apartmentRepository.UpdateAsync(apartment);
         }
 
+        public async Task<byte> DeleteApartmentAsync(int id)
+        {
+            var apartment = await _apartmentRepository.GetByIdAsync(id);
+            if (apartment == null)
+                throw new ApartmentNotFoundException(id);
 
+            if (!await _apartmentRepository.IsApartmentActiveAsync(id))
+                throw new ApartmentAlreadyDeactivatedException(id);
+
+            apartment.IsActive = false;
+            await _apartmentRepository.UpdateAsync(apartment);
+            return 1;
+        }
+
+        public async Task<Apartment> GetApartmentsByUserIdAsync(int userId)
+        {
+            var user = await _userRepository.GetByIdAsync(userId);
+            if (user == null)
+                throw new UserNotFoundException(userId);
+
+            var apartment = user.Apartment;
+            if (apartment == null)
+                throw new UserWithoutApartmentException(userId);
+
+            return apartment;
+        }
     }
 }
