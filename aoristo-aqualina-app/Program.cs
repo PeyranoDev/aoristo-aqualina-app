@@ -22,6 +22,8 @@ var client = new SecretClient(new Uri(uriKeyVault), credential);
 KeyVaultSecret sqlSecret = await client.GetSecretAsync("ConnectionStr");
 KeyVaultSecret jwtSecret = await client.GetSecretAsync("JWTSecret");
 
+KeyVaultSecret blobStorageUri1 = await client.GetSecretAsync("AoristoAlmacenConnectionString1");
+KeyVaultSecret blobStorageUri2 = await client.GetSecretAsync("AoristoAlmacenConnectionString2");
 
 string connectionString = sqlSecret.Value;
 string jwtSalt = jwtSecret.Value;
@@ -36,6 +38,12 @@ var jwtOptions = new JwtOptions
 await FirebaseInitializer.InitializeAsync(uriKeyVault, "FirebaseServiceAccount");
 
 builder.Services.AddSingleton(jwtOptions);
+
+builder.Services.AddSingleton<IBlobStorageService>(sp =>
+{
+    var storageAccountUri = builder.Configuration["Azure:Storage:Blob:ServiceUri"];
+    return new BlobStorageService(storageAccountUri);
+});
 
 builder.Services.AddDbContext<AqualinaAPIContext>(options =>
     options.UseSqlServer(connectionString));
