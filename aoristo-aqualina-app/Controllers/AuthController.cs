@@ -58,8 +58,12 @@ namespace aoristo_aqualina_app.Controllers
 
             var jwt = new JwtSecurityTokenHandler().WriteToken(tokenDescriptor);
 
-            var response = new AuthResponseDto { AccessToken = jwt};
-            return Ok(response);
+            var authResponse = new AuthResponseDto
+            {
+                AccessToken = jwt,
+            };
+
+            return Ok(ApiResponse<AuthResponseDto>.Ok(authResponse, "User logged in succesfully.");
         }
 
         [HttpPost("register")]
