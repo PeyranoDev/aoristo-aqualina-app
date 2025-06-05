@@ -45,7 +45,7 @@ namespace aoristo_aqualina_app.Controllers
             var baseUrl = $"{Request.Scheme}://{Request.Host}";
             var inviteUrl = $"{baseUrl}/register?token={token}";
 
-            return Ok(new { InvitationUrl = inviteUrl });
+            return Ok(ApiResponse<object>.Ok(new { InvitationUrl = inviteUrl }));
         }
 
         [HttpGet("validate")]
@@ -57,12 +57,12 @@ namespace aoristo_aqualina_app.Controllers
             if (invitation.IsUsed) return BadRequest("Invitation already used");
             if (invitation.ExpiresAt < DateTime.UtcNow) return BadRequest("Invitation has expired");
 
-            return Ok(new
+            return Ok(ApiResponse<object>.Ok(new
             {
                 Email = invitation.Email,
                 Role = invitation.Role.Type.ToString(),
                 Valid = true
-            });
+            }));
         }
 
         [HttpPost("register")]
@@ -86,7 +86,7 @@ namespace aoristo_aqualina_app.Controllers
             var id = await _invitationService.UpdateInvitationAsync(invitation);   
 
 
-            return Ok(id);
+            return Ok(ApiResponse<int>.Ok(id));
         }
     }
 }

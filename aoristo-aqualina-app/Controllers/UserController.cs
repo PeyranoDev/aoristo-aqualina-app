@@ -87,7 +87,7 @@ namespace aoristo_aqualina_app.Controllers
 
         [HttpGet("all")]
         [Authorize(Roles = "Admin")]
-        public async Task<ActionResult<PagedResponse<UserForResponse>>> GetUsers(
+        public async Task<IActionResult> GetUsers(
             [FromQuery] PaginationParams pagination,
             [FromQuery] UserFilterParams filters)
         {
