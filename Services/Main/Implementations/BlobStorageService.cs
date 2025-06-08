@@ -13,11 +13,13 @@ public class BlobStorageService : IBlobStorageService
 {
     private readonly BlobServiceClient _blobServiceClient;
     private const long MaxFileSizeBytes = 1_572_864;
+    private readonly string _accountName;
 
     public BlobStorageService(string storageAccountUri)
     {
         var credential = new DefaultAzureCredential();
         _blobServiceClient = new BlobServiceClient(new Uri(storageAccountUri), credential);
+        _accountName = new Uri(storageAccountUri).Host.Split('.')[0];
     }
 
     public async Task<string> UploadFileAsync(IFormFile file, string containerName, string model, string color)
@@ -36,10 +38,7 @@ public class BlobStorageService : IBlobStorageService
         if (image.Width <= image.Height)
             throw new InvalidOperationException("La imagen debe ser horizontal (ancho mayor que alto).");
 
-        string Normalize(string input) =>
-            Regex.Replace(input.Trim().ToLower(), @"[^a-z0-9]+", "_");
-
-        string fileName = $"{Normalize(model)}_{Normalize(color)}.png";
+        string fileName = $"{NormalizeBlobName(model)}_{NormalizeBlobName(color)}.png";
 
         var containerClient = await GetOrCreateContainerAsync(containerName);
         var blobClient = containerClient.GetBlobClient(fileName);
@@ -51,6 +50,27 @@ public class BlobStorageService : IBlobStorageService
         });
 
         return blobClient.Uri.ToString();
+    }
+    public async Task<bool> VehicleImageExists(string model, string color)
+    {
+        var fileName = $"{NormalizeBlobName(model)}_{NormalizeBlobName(color)}.png";
+        var containerClient = _blobServiceClient.GetBlobContainerClient("vehicles");
+        var blobClient = containerClient.GetBlobClient(fileName);
+        return await blobClient.ExistsAsync();
+    }
+    public string GenerateVehicleImageUrl(string model, string color)
+    {
+        var normalizedModel = NormalizeBlobName(model);
+        var normalizedColor = NormalizeBlobName(color);
+        return $"https://{_accountName}.blob.core.windows.net/vehicles/{normalizedModel}_{normalizedColor}.png";
+    }
+
+    public string NormalizeBlobName(string input)
+    {
+        if (string.IsNullOrWhiteSpace(input))
+            return "default";
+
+        return Regex.Replace(input.Trim().ToLower(), @"[^a-z0-9]+", "_");
     }
 
     public async Task<bool> DeleteFileAsync(string fileName, string containerName)

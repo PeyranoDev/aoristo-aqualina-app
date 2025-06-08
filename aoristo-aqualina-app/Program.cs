@@ -9,6 +9,7 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
+using Services.Background;
 using Services.Main.Implementations;
 using Services.Main.Interfaces;
 using System.Text;
@@ -45,7 +46,7 @@ builder.Services.AddSingleton<IBlobStorageService>(sp =>
     return new BlobStorageService(storageAccountUri);
 });
 
-builder.Services.AddDbContext<AqualinaAPIContext>(options =>
+builder.Services.AddDbContextPool<AqualinaAPIContext>(options =>
     options.UseSqlServer(connectionString));
 
 builder.Services.AddHttpContextAccessor();
@@ -67,6 +68,8 @@ builder.Services.AddScoped<IVehicleRequestService, VehicleRequestService>();
 builder.Services.AddScoped<IRequestRepository, RequestRepository>();
 builder.Services.AddAutoMapper(typeof(UserProfile), typeof(VehicleProfile));
 builder.Services.AddScoped<IApartmentService, ApartmentService>();
+
+builder.Services.AddHostedService<CleanupService>();
 
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>

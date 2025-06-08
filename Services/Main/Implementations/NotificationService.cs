@@ -2,7 +2,10 @@
 using Data.Repositories.Interfaces;
 using FirebaseAdmin.Messaging;
 using Services.Main.Interfaces;
-using System.Runtime.InteropServices.Marshalling;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
 
 namespace Services.Main.Implementations
 {
@@ -14,258 +17,175 @@ namespace Services.Main.Implementations
 
         public NotificationService(
             IUserRepository userRepository,
-            ITokenRepository TokenRepository,
+            ITokenRepository tokenRepository,
             IVehicleRepository vehicleRepository)
         {
             _userRepository = userRepository;
-            _tokenRepository = TokenRepository;
+            _tokenRepository = tokenRepository;
             _vehicleRepository = vehicleRepository;
         }
 
-        /// <summary>
-        /// Valida que el <see cref="NotificationToken"/> y su usuario asociado existan.
-        /// </summary>
-        /// <param name="token">Entidad de token de notificación a validar.</param>
-        /// <returns>Siempre devuelve <c>true</c> si no arroja excepción.</returns>
-        /// <exception cref="Exception">Si <paramref name="token"/> es <c>null</c> o su <see cref="NotificationToken.User"/> es <c>null</c>.</exception>
-        private bool ValidateToken(NotificationToken token)
-        {
-            if (token == null || token.User == null)
-                throw new Exception("El usuario del vehículo no tiene token de notificación registrado.");
-
-            return true;
-        }
-
-        /// <summary>
-        /// Verifica que el <see cref="Vehicle"/> exista y que el <see cref="NotificationToken"/> esté vinculado a un usuario.
-        /// </summary>
-        /// <param name="vehicle">Entidad de vehículo a validar.</param>
-        /// <param name="token">Entidad de token de notificación a validar.</param>
-        /// <returns>Siempre devuelve <c>true</c> si pasa las validaciones.</returns>
-        /// <exception cref="Exception">
-        /// Si <paramref name="vehicle"/> es <c>null</c>, o si <paramref name="token"/> es <c>null</c> o su <see cref="NotificationToken.User"/> es <c>null</c>.
-        /// </exception>
-        private bool Validations(Vehicle vehicle, NotificationToken token)
-        {
-            if (vehicle == null)
-                throw new Exception("Vehículo no encontrado.");
-
-            if (token == null || token.User == null)
-                throw new Exception("El usuario del vehículo no tiene token de notificación registrado.");
-
-            return true;
-
-        }
         public async Task SendVehiclePreparationNotificationAsync(int vehicleId, int securityUserId)
         {
-            var vehicle = await _vehicleRepository.GetByIdAsync(vehicleId);
+            var (vehicle, owner, token) = await GetValidatedVehicleOwnerAndToken(vehicleId);
+            var securityUser = await GetUserWithValidation(securityUserId);
 
-            var userId = vehicle.OwnerId;
-            var vehicleModel = vehicle.Model;
-
-            var tokenEntity = await _tokenRepository.GetLatestTokenByUserIdAsync(userId);
-
-            try
+            await SendNotification(new NotificationRequest
             {
-                Validations(vehicle, tokenEntity);
-            }
-            catch (Exception ex)
-            {
-                throw new Exception("Error en las validaciones: " + ex.Message);
-            }
-
-            var userName = tokenEntity.User.Name;
-            var securityUser = await _userRepository.GetByIdAsync(securityUserId);
-
-            var securityName = securityUser.Name;
-
-            var title = $"{userName}, tu {vehicleModel} está siendo preparado!";
-            var body = $"Hola {userName}! Tu {vehicleModel} está siendo preparado por {securityName}. En unos minutos te avisaremos cuando esté casi listo!";
-
-            var message = new Message
-            {
-                Token = tokenEntity.Token,
-                Notification = new Notification
-                {
-                    Title = title,
-                    Body = body
-                },
-                Data = new Dictionary<string, string>
-                {
-                    { "type", "vehicle_preparing" },
-                    { "vehicleModel", vehicleModel }
-                }
-            };
-
-            await FirebaseMessaging.DefaultInstance.SendAsync(message);
+                UserId = vehicle.OwnerId,
+                Title = $"{owner.Name}, tu {vehicle.Model} está siendo preparado!",
+                Body = $"Está siendo preparado por {securityUser.Name}. En unos minutos te avisaremos cuando esté casi listo!",
+                Type = "vehicle_preparing",
+                Data = new Dictionary<string, string> { { "vehicleModel", vehicle.Model } }
+            });
         }
 
         public async Task SendVehicleRequestNotificationForSecurity(int vehicleId, int userId)
         {
             var securityUsers = await _userRepository.GetAllOnDutySecurityAsync();
+            var tasks = securityUsers.Select(user =>
+                SendSecurityNotification(user, vehicleId, userId)
+            );
 
-            var messages = new List<Message>();
-
-            foreach (var user in securityUsers)
-            {
-                var tokenEntity = await _tokenRepository.GetLatestTokenByUserIdAsync(user.Id);
-
-                if (tokenEntity == null || string.IsNullOrEmpty(tokenEntity.Token))
-                    continue;
-
-                var title = $"Hola {user.Name}, ¡tienes una nueva solicitud de vehículo!";
-                var body = $"Revisa la aplicación para ver más detalles de la solicitud.";
-
-                var message = new Message
-                {
-                    Token = tokenEntity.Token,
-                    Notification = new Notification
-                    {
-                        Title = title,
-                        Body = body
-                    },
-                    Data = new Dictionary<string, string>
-            {
-                { "type", "security_vehicle_request" },
-                { "vehicleId", vehicleId.ToString() },
-                { "requestedById", userId.ToString() }
-            }
-                };
-
-                messages.Add(message);
-            }
-
-          
-            foreach (var message in messages)
-            {
-                try
-                {
-                    await FirebaseMessaging.DefaultInstance.SendAsync(message);
-                }
-                catch (Exception ex)
-                {
-                    Console.WriteLine($"Error al enviar notificación a {message.Token}: {ex.Message}");
-                }
-            }
+            await Task.WhenAll(tasks);
         }
 
         public async Task SendVehicleReadyNotificationForUser(int vehicleId)
         {
-            var vehicle = await _vehicleRepository.GetByIdAsync(vehicleId);
-
-            var userId = vehicle.OwnerId;
-            var vehicleModel = vehicle.Model;
-
-            var tokenEntity = await _tokenRepository.GetLatestTokenByUserIdAsync(userId);
-
-            try
+            var (vehicle, owner, token) = await GetValidatedVehicleOwnerAndToken(vehicleId);
+            await SendNotification(new NotificationRequest
             {
-                ValidateToken(tokenEntity);
-            }
-            catch (Exception ex)
-            {
-                throw new Exception("Error en las validaciones: " + ex.Message);
-            }
-
-            var userName = tokenEntity.User.Name;
-
-            var title = $"{userName}, tu {vehicleModel} está listo!";
-            var body = $"Hola {userName}! Tu {vehicleModel} está listo para ser recogido. Por favor revisa la aplicación para más detalles.";
-
-            var message = new Message
-            {
-                Token = tokenEntity.Token,
-                Notification = new Notification
-                {
-                    Title = title,
-                    Body = body
-                },
-                Data = new Dictionary<string, string>
-                {
-                    { "type", "vehicle_ready" },
-                    { "vehicleModel", vehicleModel }
-                }
-            };
-
-            await FirebaseMessaging.DefaultInstance.SendAsync(message);
-
+                UserId = vehicle.OwnerId,
+                Title = $"{owner.Name}, ¡tu vehículo está listo!",
+                Body = $"Tu {vehicle.Model} está listo para ser recogido.",
+                Type = "vehicle_ready"
+            });
         }
+
         public async Task SendVehicleAlmostReadyNotificationForUser(int vehicleId)
         {
-            var vehicle = await _vehicleRepository.GetByIdAsync(vehicleId);
-
-            var userId = vehicle.OwnerId;
-            var vehicleModel = vehicle.Model;
-
-            var tokenEntity = await _tokenRepository.GetLatestTokenByUserIdAsync(userId);
-            try
+            var (vehicle, owner, token) = await GetValidatedVehicleOwnerAndToken(vehicleId);
+            await SendNotification(new NotificationRequest
             {
-                ValidateToken(tokenEntity);
-            }
-            catch (Exception ex)
-            {
-                throw new Exception("Error en las validaciones: " + ex.Message);
-            }
-
-            var userName = tokenEntity.User.Name;
-
-            var title = $"{userName}, tu {vehicleModel} está casi listo!";
-            var body = $"Hola {userName}! Tu {vehicleModel} está casi listo para ser recogido. Por favor ve dirigiendote al entrepiso para retirarlo.";
-
-            var message = new Message
-            {
-                Token = tokenEntity.Token,
-                Notification = new Notification
-                {
-                    Title = title,
-                    Body = body
-                },
-                Data = new Dictionary<string, string>
-                {
-                    { "type", "vehicle_almost_ready" },
-                    { "vehicleModel", vehicleModel }
-                }
-            };
-            await FirebaseMessaging.DefaultInstance.SendAsync(message);
+                UserId = vehicle.OwnerId,
+                Title = $"{owner.Name}, tu {vehicle.Model} está casi listo!",
+                Body = "Por favor ve dirigiéndote al entrepiso para retirarlo.",
+                Type = "vehicle_almost_ready"
+            });
         }
+
         public async Task SendVehicleCancelledNotificationForUser(int vehicleId)
         {
-            var vehicle = await _vehicleRepository.GetByIdAsync(vehicleId);
-
-            var userId = vehicle.OwnerId;
-            var vehicleModel = vehicle.Model;
-
-            var tokenEntity = await _tokenRepository.GetLatestTokenByUserIdAsync(userId);
-            try
+            var (vehicle, owner, token) = await GetValidatedVehicleOwnerAndToken(vehicleId);
+            await SendNotification(new NotificationRequest
             {
-                ValidateToken(tokenEntity);
-            }
-            catch (Exception ex)
-            {
-                throw new Exception("Error en las validaciones: " + ex.Message);
-            }
+                UserId = vehicle.OwnerId,
+                Title = $"{owner.Name}, tu {vehicle.Model} ha sido cancelado!",
+                Body = "¡Haz click para ver más información!",
+                Type = "vehicle_cancelled"
+            });
+        }
 
-            var userName = tokenEntity.User.Name;
-
-            var title = $"{userName}, tu {vehicleModel} ha sido cancelado!";
-            var body = $"Hola {userName}! Tu pedido para el vehiculo {vehicleModel} ha sido cancelado, ¡Haz click para ver maas informacion! .";
+        #region Private Methods
+        private async Task SendNotification(NotificationRequest request)
+        {
+            var token = await GetValidNotificationToken(request.UserId);
+            if (token == null) return;
 
             var message = new Message
             {
-                Token = tokenEntity.Token,
+                Token = token.Token,
                 Notification = new Notification
                 {
-                    Title = title,
-                    Body = body
+                    Title = request.Title,
+                    Body = request.Body
                 },
                 Data = new Dictionary<string, string>
                 {
-                    { "type", "vehicle_cancelled" },
-                    { "vehicleModel", vehicleModel }
+                    { "type", request.Type },
+                    { "vehicleId", request.UserId.ToString() }
                 }
             };
+
+            if (request.Data != null)
+            {
+                var mutableData = new Dictionary<string, string>(message.Data);
+                foreach (var item in request.Data)
+                    mutableData.Add(item.Key, item.Value);
+
+                message.Data = mutableData;
+            }
+
             await FirebaseMessaging.DefaultInstance.SendAsync(message);
+            await UpdateTokenLastUsed(token.Id);
         }
+
+        private async Task SendSecurityNotification(User user, int vehicleId, int requestedById)
+        {
+            var token = await GetValidNotificationToken(user.Id);
+            if (token == null) return;
+
+            var message = new Message
+            {
+                Token = token.Token,
+                Notification = new Notification
+                {
+                    Title = $"Hola {user.Name}, ¡nueva solicitud de vehículo!",
+                    Body = "Revisa la aplicación para más detalles."
+                },
+                Data = new Dictionary<string, string>
+                {
+                    { "type", "security_vehicle_request" },
+                    { "vehicleId", vehicleId.ToString() },
+                    { "requestedById", requestedById.ToString() }
+                }
+            };
+
+            await FirebaseMessaging.DefaultInstance.SendAsync(message);
+            await UpdateTokenLastUsed(token.Id);
+        }
+
+        private async Task<NotificationToken?> GetValidNotificationToken(int userId)
+        {
+            var token = await _tokenRepository.GetLatestByUserIdAsync(userId);
+            return (token != null && !string.IsNullOrEmpty(token.Token)) ? token : null;
+        }
+
+        private async Task UpdateTokenLastUsed(int tokenId)
+        {
+            await _tokenRepository.UpdateLastUsedAsync(tokenId);
+        }
+
+        private async Task<(Vehicle vehicle, User owner, NotificationToken token)> GetValidatedVehicleOwnerAndToken(int vehicleId)
+        {
+            var vehicle = await _vehicleRepository.GetByIdAsync(vehicleId) ??
+                throw new InvalidOperationException("Vehículo no encontrado");
+
+            var owner = await _userRepository.GetUserWithNotificationTokenAsync(vehicle.OwnerId) ??
+                throw new InvalidOperationException("Dueño del vehículo no encontrado");
+
+            var token = owner.NotificationTokens
+                .OrderByDescending(t => t.CreatedAt)
+                .FirstOrDefault(t => !string.IsNullOrEmpty(t.Token)) ??
+                throw new InvalidOperationException("Usuario no tiene token de notificación válido");
+
+            return (vehicle, owner, token);
+        }
+
+        private async Task<User> GetUserWithValidation(int userId)
+        {
+            return await _userRepository.GetByIdAsync(userId) ??
+                throw new InvalidOperationException("Usuario no encontrado");
+        }
+
+        private class NotificationRequest
+        {
+            public int UserId { get; set; }
+            public string Title { get; set; }
+            public string Body { get; set; }
+            public string Type { get; set; }
+            public Dictionary<string, string>? Data { get; set; }
+        }
+        #endregion
     }
 }
-   

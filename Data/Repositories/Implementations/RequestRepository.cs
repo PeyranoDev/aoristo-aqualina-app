@@ -1,4 +1,5 @@
 ﻿using Data.Entities;
+using Data.Enum;
 using Data.Repositories.Interfaces;
 using Microsoft.EntityFrameworkCore;
 using System;
@@ -50,7 +51,6 @@ namespace Data.Repositories.Implementations
         {
             return await _context.Requests
                 .Include(r => r.Vehicle)
-                .Include(r => r.RequestedBy)
                 .ToListAsync();
         }
 
@@ -58,10 +58,33 @@ namespace Data.Repositories.Implementations
         {
             return await _context.Requests
                 .Include(r => r.Vehicle)
-                .Include(r => r.RequestedBy)
                 .Where(r => r.VehicleId == vehicleId)
                 .OrderByDescending(r => r.RequestedAt)
                 .FirstOrDefaultAsync();
+        }
+        public async Task<bool> DeleteOldRequestsAsync(TimeSpan olderThan)
+        {
+            try
+            {
+                var cutoffDate = DateTime.UtcNow.Subtract(olderThan);
+
+                
+                var oldRequests = await _context.Requests
+                    .Where(r =>
+                        (r.Status == VehicleRequestStatusEnum.Completed && r.CompletedAt < cutoffDate) ||
+                        (r.Status == VehicleRequestStatusEnum.Cancelled && r.UpdatedAt < cutoffDate) ||
+                        (r.Status == VehicleRequestStatusEnum.Pending && r.RequestedAt < cutoffDate.AddDays(-30)))
+                    .ToListAsync();
+
+                if (oldRequests.Count == 0) return false;
+
+                _context.Requests.RemoveRange(oldRequests);
+                return await _context.SaveChangesAsync() > 0;
+            }
+            catch (DbUpdateException)
+            {
+                return false;
+            }
         }
     }
 }

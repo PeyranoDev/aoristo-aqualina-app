@@ -6,4 +6,6 @@ public interface IBlobStorageService
     Task<bool> DeleteContainerAsync(string containerName);
     Task<bool> DeleteFileAsync(string fileName, string containerName);
     Task<string> UploadFileAsync(IFormFile file, string containerName, string model, string color);
+    string GenerateVehicleImageUrl(string model, string color);
+    string NormalizeBlobName(string input);
 }

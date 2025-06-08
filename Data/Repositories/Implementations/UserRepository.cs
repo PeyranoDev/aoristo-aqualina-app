@@ -96,5 +96,11 @@ namespace Data.Repositories.Implementations
                 .Where(u => u.Role.Type == UserRoleEnum.Security && u.IsOnDuty == true)
                 .ToListAsync();
         }
+        public async Task<User> GetUserWithNotificationTokenAsync(int userId)
+        {
+            return await _context.Users
+                .Include(u => u.NotificationTokens)
+                .FirstOrDefaultAsync(u => u.Id == userId);
+        }
     }
 }

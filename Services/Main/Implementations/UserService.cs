@@ -1,4 +1,5 @@
 ﻿using AutoMapper;
+using AutoMapper.QueryableExtensions;
 using Common.Exceptions;
 using Common.Helpers;
 using Common.Models;
@@ -36,7 +37,7 @@ namespace Services.Main.Implementations
 
         public async Task<User?> ValidateAsync(CredentialsDTO dto)
         {
-            var user = await _userRepo.GetByUsernameAsync(dto.Username);
+            var user = await _userRepo.GetByUsernameAsync(dto.Username).ConfigureAwait(false);
             if (user == null)
                 return null;
 
@@ -97,14 +98,13 @@ namespace Services.Main.Implementations
             var totalRecords = await query.CountAsync();
 
             var users = await query
-                .Include(u => u.Role)
-                .Include(u => u.Apartment)
                 .Skip((pagination.PageNumber - 1) * pagination.PageSize)
                 .Take(pagination.PageSize)
+                .ProjectTo<UserForResponse>(_mapper.ConfigurationProvider)
                 .ToListAsync();
 
             return new PagedResponse<UserForResponse>(
-                _mapper.Map<List<UserForResponse>>(users),
+                users,
                 totalRecords,
                 pagination.PageNumber,
                 pagination.PageSize

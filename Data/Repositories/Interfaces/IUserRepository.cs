@@ -17,5 +17,6 @@ namespace Data.Repositories.Interfaces
         Task<bool> UsernameExistsAsync(string username);
         Task<IList<User>> GetAllSecurityAsync();
         Task<List<User>> GetAllOnDutySecurityAsync();
+        Task<User> GetUserWithNotificationTokenAsync(int userId);
     }
 }

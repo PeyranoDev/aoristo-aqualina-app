@@ -42,14 +42,10 @@ namespace aoristo_aqualina_app.Controllers
         [Authorize(Roles = "Admin")]
         public async Task<IActionResult> DeleteApartmentById([FromRoute] int apartmentId)
         {
-            byte result = await _apartmentService.DeleteApartmentAsync(apartmentId);
+            
+            await _apartmentService.DeleteApartmentAsync(apartmentId);
 
-            return result switch
-            {
-                0 => NotFound(ApiResponse<object>.NotFound($"Apartment with id: {apartmentId} not found")),
-                2 => BadRequest(ApiResponse<object>.ValidationError($"Apartment with id: {apartmentId} cannot be deleted because it is already deactivated")),
-                _ => Ok(ApiResponse<object>.NoContent("Apartment deleted successfully")),
-            };
+            return NoContent();
         }
 
         [HttpPut("{apartmentId}")]

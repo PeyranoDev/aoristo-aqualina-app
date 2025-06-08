@@ -25,7 +25,6 @@ namespace Services.Main.Implementations
             var newApartment = new Apartment
             {
                 Identifier = apartment.Identifier,
-                IsActive = true
             };
 
             return await _apartmentRepository.CreateAsync(newApartment);
@@ -57,18 +56,19 @@ namespace Services.Main.Implementations
             return await _apartmentRepository.UpdateAsync(apartment);
         }
 
-        public async Task<byte> DeleteApartmentAsync(int id)
+        public async Task DeleteApartmentAsync(int id)
         {
             var apartment = await _apartmentRepository.GetByIdAsync(id);
             if (apartment == null)
                 throw new ApartmentNotFoundException(id);
-
-            if (!await _apartmentRepository.IsApartmentActiveAsync(id))
-                throw new ApartmentAlreadyDeactivatedException(id);
-
-            apartment.IsActive = false;
-            await _apartmentRepository.UpdateAsync(apartment);
-            return 1;
+            try
+            {
+                await _apartmentRepository.DeleteAsync(id);
+            }
+            catch (Exception ex)
+            {
+                throw new Exception("No se pudo eliminar el departamento", ex);
+            }
         }
 
         public async Task<Apartment> GetApartmentsByUserIdAsync(int userId)

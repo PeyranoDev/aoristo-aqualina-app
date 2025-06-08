@@ -8,5 +8,6 @@ namespace Data.Repositories.Interfaces
         Task<List<Request>> GetAllAsync();
         Task<bool> UpdateAsync(Request request);
         Task<Request?> GetLatestByVehicleAsync(int vehicleId);
+        Task<bool> DeleteOldRequestsAsync(TimeSpan olderThan);
     }
 }

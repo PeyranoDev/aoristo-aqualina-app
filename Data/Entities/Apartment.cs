@@ -6,12 +6,14 @@ using System.Threading.Tasks;
 
 namespace Data.Entities
 {
+
     public class Apartment
     {
         public int Id { get; set; }
         public string Identifier { get; set; } = string.Empty;
-        public ICollection<User>? Users { get; set; }
-        public bool IsActive { get; set; }
+        public int TowerId { get; set; }
+        public Tower Tower { get; set; }
 
+        public ICollection<User> Users { get; set; } = new List<User>();
     }
 }

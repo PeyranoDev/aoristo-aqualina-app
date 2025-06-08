@@ -50,17 +50,43 @@ namespace Data.Repositories.Implementations
             return await _context.Apartments.AnyAsync(a => a.Identifier == identifier);
         }
 
-        public async Task<bool> IsApartmentActiveAsync(int id)
+        public async Task<bool> DeleteAsync(int id)
         {
-            var apartment = await _context.Apartments.FindAsync(id);
-            return apartment != null && apartment.IsActive;
+            using var transaction = await _context.Database.BeginTransactionAsync();
+
+            try
+            {
+                await DetachUsersFromApartmentAsync(id);
+
+                var apartment = await _context.Apartments.FindAsync(id);
+                if (apartment == null) return false;
+
+                _context.Apartments.Remove(apartment);
+                await _context.SaveChangesAsync();
+
+                await transaction.CommitAsync();
+                return true;
+            }
+            catch
+            {
+                await transaction.RollbackAsync();
+                throw;
+            }
+        }
+        public async Task DetachUsersFromApartmentAsync(int apartmentId)
+        {
+            var users = await _context.Users
+                .Where(u => u.ApartmentId == apartmentId)
+                .ToListAsync();
+
+            foreach (var user in users)
+            {
+                user.ApartmentId = null;
+                user.Apartment = null;
+            }
+
+            await _context.SaveChangesAsync();
         }
 
-        public async Task<List<Apartment>> GetActiveApartmentsAsync()
-        {
-            return await _context.Apartments
-                .Where(a => a.IsActive)
-                .ToListAsync();
-        }
     }
 }

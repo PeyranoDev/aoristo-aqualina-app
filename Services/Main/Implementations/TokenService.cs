@@ -21,7 +21,7 @@ namespace Services.Main.Implementations
 
         public async Task<bool> AddNotificationTokenAsync(NotificationTokenCreateDTO dto, int userId)
         {
-            var existingToken = await _tokenRepository.GetNotificationTokenByTokenAsync(dto.Token);
+            var existingToken = await _tokenRepository.GetByTokenAsync(dto.Token);
 
             if (existingToken != null)
             {
@@ -30,7 +30,7 @@ namespace Services.Main.Implementations
                 existingToken.LastSeen = DateTime.UtcNow;
                 existingToken.UserId = userId;
 
-                return await _tokenRepository.UpdateNotificationTokenAsync(existingToken);
+                return await _tokenRepository.UpdateAsync(existingToken);
             }
 
             var newToken = new NotificationToken
@@ -42,7 +42,7 @@ namespace Services.Main.Implementations
                 LastSeen = DateTime.UtcNow
             };
 
-            var result = await _tokenRepository.AddNotificationTokenAsync(newToken);
+            var result = await _tokenRepository.AddAsync(newToken);
 
             if (result)
             {

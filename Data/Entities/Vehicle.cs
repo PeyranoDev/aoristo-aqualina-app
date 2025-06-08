@@ -1,5 +1,7 @@
-﻿using System;
+﻿using Data.Enum;
+using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations.Schema;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -15,9 +17,16 @@ namespace Data.Entities
         public bool IsParked { get; set; }
         public bool IsActive { get; set; }
         public int OwnerId { get; set; }
-        public User Owner { get; set; }
+        public ICollection<Request> Requests { get; set; } = new List<Request>();
 
-        public ICollection<Request>? Requests { get; set; }
+        [NotMapped]
+        public Request? ActiveRequest
+            => Requests.FirstOrDefault(r =>
+                r.Status == VehicleRequestStatusEnum.Pending ||
+                r.Status == VehicleRequestStatusEnum.InPreparation ||
+                r.Status == VehicleRequestStatusEnum.AlmostReady ||
+                r.Status == VehicleRequestStatusEnum.Ready
+            );
     }
 }
 
