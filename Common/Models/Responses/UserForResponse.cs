@@ -5,7 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Common.Models
+namespace Common.Models.Responses
 {
     public class UserForResponse
     {
@@ -16,6 +16,7 @@ namespace Common.Models
         public string Surname { get; set; }
         public string Role { get; set; }
         public string Phone { get; set; }
-        public ApartmentInfoDTO ApartmentInfo { get; set; }
+        public ApartmentInfoDTO? ApartmentInfo { get; set; }
+        public ICollection<TowerForUserResponseDTO> AssociatedTowers { get; set; } = new List<TowerForUserResponseDTO>();
     }
 }

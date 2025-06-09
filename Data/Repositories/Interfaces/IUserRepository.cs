@@ -5,7 +5,6 @@ namespace Data.Repositories.Interfaces
 {
     public interface IUserRepository
     {
-        Task<User?> ValidateAsync(string username, string hashedPassword);
         Task<User?> GetByIdAsync(int id);
         Task<User?> UpdateAsync(User user);
 
@@ -18,5 +17,6 @@ namespace Data.Repositories.Interfaces
         Task<IList<User>> GetAllSecurityAsync();
         Task<List<User>> GetAllOnDutySecurityAsync();
         Task<User> GetUserWithNotificationTokenAsync(int userId);
+        Task<User?> GetByUsernameWithTowerDataAsync(string username);
     }
 }

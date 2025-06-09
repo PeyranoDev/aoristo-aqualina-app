@@ -1,33 +1,33 @@
 ﻿using Azure.Identity;
 using Azure.Security.KeyVault.Secrets;
 using Common.Infrastructure.Security.Middlewares;
+using Common.Models.Profiles;
 using Data;
 using Data.Models.Profiles;
 using Data.Repositories.Implementations;
 using Data.Repositories.Interfaces;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Diagnostics.HealthChecks;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using Services.Background;
 using Services.Main.Implementations;
 using Services.Main.Interfaces;
 using System.Text;
+using System.Threading.RateLimiting;
 
 var builder = WebApplication.CreateBuilder(args);
-var uriKeyVault = "https://aoristo-key-vault.vault.azure.net/";
+var isDevelopment = builder.Environment.IsDevelopment();
 
+var keyVaultUri = new Uri("https://aoristo-key-vault.vault.azure.net/");
 var credential = new DefaultAzureCredential();
-var client = new SecretClient(new Uri(uriKeyVault), credential);
+var client = new SecretClient(keyVaultUri, credential);
 
 KeyVaultSecret sqlSecret = await client.GetSecretAsync("ConnectionStr");
 KeyVaultSecret jwtSecret = await client.GetSecretAsync("JWTSecret");
-
-KeyVaultSecret blobStorageUri1 = await client.GetSecretAsync("AoristoAlmacenConnectionString1");
-KeyVaultSecret blobStorageUri2 = await client.GetSecretAsync("AoristoAlmacenConnectionString2");
-
 string connectionString = sqlSecret.Value;
-string jwtSalt = jwtSecret.Value;
 
 var jwtOptions = new JwtOptions
 {
@@ -35,21 +35,13 @@ var jwtOptions = new JwtOptions
     Issuer = builder.Configuration["Jwt:Issuer"],
     Audience = builder.Configuration["Jwt:Audience"]
 };
-
-await FirebaseInitializer.InitializeAsync(uriKeyVault, "FirebaseServiceAccount");
-
 builder.Services.AddSingleton(jwtOptions);
 
-builder.Services.AddSingleton<IBlobStorageService>(sp =>
-{
-    var storageAccountUri = builder.Configuration["Azure:Storage:Blob:ServiceUri"];
-    return new BlobStorageService(storageAccountUri);
-});
+await FirebaseInitializer.InitializeAsync(keyVaultUri.ToString(), "FirebaseServiceAccount");
 
+// --- INYECCIÓN DE DEPENDENCIAS ---
 builder.Services.AddDbContextPool<AqualinaAPIContext>(options =>
     options.UseSqlServer(connectionString));
-
-builder.Services.AddHttpContextAccessor();
 
 builder.Services.AddScoped<INotificationService, NotificationService>();
 builder.Services.AddScoped<IUserService, UserService>();
@@ -66,10 +58,20 @@ builder.Services.AddScoped<IVehicleService, VehicleService>();
 builder.Services.AddScoped<IVehicleRepository, VehicleRepository>();
 builder.Services.AddScoped<IVehicleRequestService, VehicleRequestService>();
 builder.Services.AddScoped<IRequestRepository, RequestRepository>();
-builder.Services.AddAutoMapper(typeof(UserProfile), typeof(VehicleProfile));
 builder.Services.AddScoped<IApartmentService, ApartmentService>();
+builder.Services.AddScoped<ITowerRepository, TowerRepository>();
+builder.Services.AddScoped<ITowerService, TowerService>();
+builder.Services.AddSingleton<IBlobStorageService>(sp =>
+{
+    var storageAccountUri = builder.Configuration["Azure:Storage:Blob:ServiceUri"];
+    return new BlobStorageService(storageAccountUri);
+});
 
+builder.Services.AddAutoMapper(typeof(UserProfile), typeof(VehicleProfile), typeof(TowerProfile));
 builder.Services.AddHostedService<CleanupService>();
+builder.Services.AddHttpContextAccessor();
+builder.Services.AddControllers();
+
 
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>
@@ -80,17 +82,40 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             ValidateAudience = true,
             ValidateLifetime = true,
             ValidateIssuerSigningKey = true,
-            ValidIssuer = builder.Configuration["Jwt:Issuer"],
-            ValidAudience = builder.Configuration["Jwt:Audience"],
-            IssuerSigningKey = new SymmetricSecurityKey(
-                Encoding.UTF8.GetBytes(jwtOptions.Key))
+            ValidIssuer = jwtOptions.Issuer,
+            ValidAudience = jwtOptions.Audience,
+            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtOptions.Key))
         };
     });
 
+builder.Services.AddResponseCaching();
 
 
-builder.Services.AddHealthChecks();
-builder.Services.AddControllers();
+builder.Services.AddRateLimiter(options =>
+{
+    options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
+    options.AddPolicy("ApiPolicy", httpContext =>
+        RateLimitPartition.GetFixedWindowLimiter(
+            partitionKey: httpContext.User.Identity?.Name ?? httpContext.Connection.RemoteIpAddress?.ToString(),
+            factory: partition => new FixedWindowRateLimiterOptions
+            {
+                AutoReplenishment = true,
+                PermitLimit = 100,
+                Window = TimeSpan.FromMinutes(1)
+            }));
+});
+
+
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("MobileAppPolicy", policy =>
+    {
+        policy.AllowAnyOrigin()
+              .AllowAnyMethod()
+              .AllowAnyHeader();
+    });
+});
+
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(c =>
 {
@@ -103,53 +128,39 @@ builder.Services.AddSwaggerGen(c =>
         Type = SecuritySchemeType.ApiKey,
         Scheme = "Bearer"
     });
-    c.AddSecurityRequirement(new OpenApiSecurityRequirement
+    c.AddSecurityRequirement(new OpenApiSecurityRequirement {
     {
-        {
-            new OpenApiSecurityScheme
-            {
-                Reference = new OpenApiReference { Type = ReferenceType.SecurityScheme, Id = "Bearer" }
-            },
-            Array.Empty<string>()
-        }
-    });
+        new OpenApiSecurityScheme { Reference = new OpenApiReference { Type = ReferenceType.SecurityScheme, Id = "Bearer" }},
+        Array.Empty<string>()
+    }});
 });
-
-builder.Services.AddCors(options =>
-{
-    options.AddPolicy("AllowAll", policy =>
-    {
-        policy
-            .AllowAnyOrigin()
-            .AllowAnyMethod()
-            .AllowAnyHeader();
-    });
-});
-
 
 var app = builder.Build();
 
-app.UseCors("AllowAll");
+app.UseRateLimiter();
 app.UseHttpsRedirection();
+if (!isDevelopment)
+{
+    app.UseHsts();
+}
+
+app.UseCors("MobileAppPolicy");
+
 app.UseRouting();
+
+app.UseResponseCaching();
+
 app.UseMiddleware<ExceptionHandlingMiddleware>();
+
 app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();
-app.MapHealthChecks("/healthz");
-if (app.Environment.IsDevelopment())
+
+if (isDevelopment)
 {
     app.UseSwagger();
     app.UseSwaggerUI();
-}
-else
-{
-    app.Use(async (context, next) =>
-    {
-        context.Response.Headers.Add("Strict-Transport-Security", "max-age=31536000");
-        await next();
-    });
 }
 
 app.Run();

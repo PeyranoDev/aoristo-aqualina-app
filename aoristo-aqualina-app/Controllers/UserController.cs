@@ -2,16 +2,18 @@
 using Common.Models;
 using Common.Models.Requests;
 using Common.Models.Responses;
-using Common.Models.Responses.Common.Models.Responses;
 using Data.Entities;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 using Services.Main.Interfaces;
+using System.Threading.Tasks;
 
 namespace aoristo_aqualina_app.Controllers
 {
     [Route("user")]
     [ApiController]
+    [EnableRateLimiting("ApiPolicy")] 
     public class UserController : MainController
     {
         private readonly IUserService _userService;
@@ -60,6 +62,7 @@ namespace aoristo_aqualina_app.Controllers
 
         [HttpGet("{id}")]
         [Authorize(Roles = "Admin, User, Security")]
+        [ResponseCache(Duration = 120, VaryByHeader = "Authorization")] 
         public async Task<IActionResult> GetUser(int id)
         {
             var user = await _userService.GetByIdAsync(id);
@@ -75,6 +78,7 @@ namespace aoristo_aqualina_app.Controllers
 
         [HttpGet]
         [Authorize(Roles = "Admin, User, Security")]
+        [ResponseCache(Duration = 120, VaryByHeader = "Authorization")] 
         public async Task<IActionResult> GetCurrentUser()
         {
             var user = await _userService.GetByIdAsync(GetUserIdFromToken());
@@ -87,6 +91,7 @@ namespace aoristo_aqualina_app.Controllers
 
         [HttpGet("all")]
         [Authorize(Roles = "Admin")]
+        [ResponseCache(Duration = 300, VaryByQueryKeys = new[] { "*" })] 
         public async Task<IActionResult> GetUsers(
             [FromQuery] PaginationParams pagination,
             [FromQuery] UserFilterParams filters)

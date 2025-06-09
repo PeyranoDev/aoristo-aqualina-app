@@ -17,5 +17,6 @@ namespace Common.Models.Requests
         public int RoleId { get; set; }
         public required string Phone { get; set; }
         public int? ApartmentId { get; set; }
+        public int? TowerId { get; set; } 
     }
 }

@@ -13,5 +13,6 @@ namespace Common.Models.Requests
         public string? RoleType { get; set; }
         public bool? IsActive { get; set; }
         public string? ApartmentIdentifier { get; set; }
+        public int? TowerId { get; set; }
     }
 }

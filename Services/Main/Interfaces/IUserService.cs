@@ -1,6 +1,7 @@
 ﻿using Common.Models;
 using Common.Models.Requests;
-using Common.Models.Responses.Common.Models.Responses;
+using Common.Models.Responses;
+using Data.Entities;
 
 namespace Services.Main.Interfaces
 {

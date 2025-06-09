@@ -2,9 +2,9 @@
 using AutoMapper.QueryableExtensions;
 using Common.Exceptions;
 using Common.Helpers;
-using Common.Models;
 using Common.Models.Requests;
-using Common.Models.Responses.Common.Models.Responses;
+using Common.Models.Responses;
+using Data.Entities;
 using Data.Repositories.Interfaces;
 using Humanizer;
 using Microsoft.EntityFrameworkCore;
@@ -37,13 +37,14 @@ namespace Services.Main.Implementations
 
         public async Task<User?> ValidateAsync(CredentialsDTO dto)
         {
-            var user = await _userRepo.GetByUsernameAsync(dto.Username).ConfigureAwait(false);
+
+            var user = await _userRepo.GetByUsernameWithTowerDataAsync(dto.Username);
+
             if (user == null)
                 return null;
 
             bool ok = _hashingService.VerifyPassword(dto.Password, user.PasswordHash);
             return ok ? user : null;
-
         }
 
         public async Task<User?> UpdateUserAsync(UserForUpdateDTO dto, int userId)
@@ -91,7 +92,7 @@ namespace Services.Main.Implementations
             UserFilterParams filters,
             PaginationParams pagination)
         {
-            var query = _userRepo.GetQueryable()
+            var query = _userRepo.GetQueryable() 
                 .ApplyFilters(filters)
                 .ApplySorting(pagination.SortBy, pagination.SortOrder);
 

@@ -1,4 +1,5 @@
 ﻿using Common.Models.Requests;
+using Data.Entities;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -34,7 +35,6 @@ namespace Common.Helpers
         {
             if (filters == null) return query;
 
-            // Aplicar filtros individuales
             if (!string.IsNullOrEmpty(filters.Name))
                 query = query.Where(u => u.Name.Contains(filters.Name));
 
@@ -50,6 +50,14 @@ namespace Common.Helpers
 
             if (filters.IsActive.HasValue)
                 query = query.Where(u => u.IsActive == filters.IsActive.Value);
+
+            if (filters.TowerId.HasValue)
+            {
+                query = query.Where(u =>
+                    (u.Apartment != null && u.Apartment.TowerId == filters.TowerId.Value) ||
+                    (u.UserTowers.Any(ut => ut.TowerId == filters.TowerId.Value)) 
+                );
+            }
 
             return query;
         }

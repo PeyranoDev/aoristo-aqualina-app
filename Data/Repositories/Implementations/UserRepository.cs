@@ -16,10 +16,15 @@ namespace Data.Repositories.Implementations
             _context = context;
         }
 
-        public async Task<User?> ValidateAsync(string username, string hashedPassword)
+        public async Task<User?> GetByUsernameWithTowerDataAsync(string username)
         {
             return await _context.Users
-                .FirstOrDefaultAsync(u => u.Username == username && u.PasswordHash == hashedPassword);
+                .Include(u => u.Role)
+                .Include(u => u.Apartment)
+                    .ThenInclude(a => a.Tower)
+                .Include(u => u.UserTowers) 
+                    .ThenInclude(ut => ut.Tower)
+                .FirstOrDefaultAsync(u => u.Username == username);
         }
         public async Task<bool> UsernameExistsAsync(string username)
         {
@@ -30,7 +35,9 @@ namespace Data.Repositories.Implementations
         {
             return await _context.Users
                 .Include(u => u.Apartment)
+                    .ThenInclude(a => a.Tower) 
                 .Include(u => u.Role)
+                .Include(u => u.UserTowers) 
                 .FirstOrDefaultAsync(u => u.Id == id);
         }
 
@@ -77,6 +84,9 @@ namespace Data.Repositories.Implementations
             return _context.Users
                 .Include(u => u.Role)
                 .Include(u => u.Apartment)
+                    .ThenInclude(a => a.Tower) 
+                .Include(u => u.UserTowers)
+                    .ThenInclude(ut => ut.Tower) 
                 .AsQueryable();
         }
 
@@ -85,6 +95,7 @@ namespace Data.Repositories.Implementations
             return await _context.Users
                 .Include(u => u.Role)
                 .Include(u => u.Apartment)
+                .Include(u => u.UserTowers)
                 .Where(u => u.Role.Type == UserRoleEnum.Security)
                 .ToListAsync();
         }
@@ -93,6 +104,7 @@ namespace Data.Repositories.Implementations
         {
             return await _context.Users
                 .Include(u => u.Role)
+                .Include(u => u.UserTowers)
                 .Where(u => u.Role.Type == UserRoleEnum.Security && u.IsOnDuty == true)
                 .ToListAsync();
         }

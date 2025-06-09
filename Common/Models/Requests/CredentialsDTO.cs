@@ -8,7 +8,8 @@ namespace Common.Models.Requests
 {
     public class CredentialsDTO
     {
-        public string Username { get; set; }
-        public string Password { get; set; }
+        public required string Username { get; set; }
+        public required string Password { get; set; }
+        public required int SelectedTowerId { get; set; }
     }
 }

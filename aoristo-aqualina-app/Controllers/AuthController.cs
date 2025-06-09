@@ -38,32 +38,17 @@ namespace aoristo_aqualina_app.Controllers
             {
                 return Forbid();
             }
+            var associatedTowerIds = user.GetAssociatedTowerIds();
 
-            var claims = new List<Claim>
+           
+            if (!associatedTowerIds.Contains(dto.SelectedTowerId))
             {
-               new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
-                new Claim("username", user.Username),
-                new Claim("full name", $"{user.Name} {user.Surname}"),
-                new Claim(ClaimTypes.Role, user.Role.Type.ToString())
-            };
+                return Forbid();
+            }
 
-            var securityKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_jwtOptions.Key));
-            var credentials = new SigningCredentials(securityKey, SecurityAlgorithms.HmacSha256Signature);
-            var tokenDescriptor = new JwtSecurityToken(
-                issuer: _config["Jwt:Issuer"],
-                audience: _config["Jwt:Audience"],
-                claims: claims,
-                expires: DateTime.Now.AddDays(30),
-                signingCredentials: credentials);
+            var authResponse = GenerateFinalJwtResponse(user, dto.SelectedTowerId);
 
-            var jwt = new JwtSecurityTokenHandler().WriteToken(tokenDescriptor);
-
-            var authResponse = new AuthResponseDto
-            {
-                AccessToken = jwt,
-            };
-
-            return Ok(ApiResponse<AuthResponseDto>.Ok(authResponse, "User logged in succesfully."));
+            return Ok(ApiResponse<AuthResponseDto>.Ok(authResponse, "User logged in successfully."));
         }
 
         [HttpPost("register")]
@@ -77,6 +62,34 @@ namespace aoristo_aqualina_app.Controllers
 
             var userResponse = await _userService.CreateUserAsync(dto);
             return Ok(ApiResponse<UserForResponse>.Ok(userResponse, "User registered successfully."));
+        }
+
+        private AuthResponseDto GenerateFinalJwtResponse(User user, int selectedTowerId)
+        {
+            var claims = new List<Claim>
+            {
+                new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
+                new Claim("username", user.Username),
+                new Claim("full name", $"{user.Name} {user.Surname}"),
+                new Claim(ClaimTypes.Role, user.Role.Type.ToString()),
+                new Claim("towerId", selectedTowerId.ToString()) 
+            };
+
+            var securityKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_jwtOptions.Key));
+            var credentials = new SigningCredentials(securityKey, SecurityAlgorithms.HmacSha256Signature);
+            var tokenDescriptor = new JwtSecurityToken(
+                issuer: _config["Jwt:Issuer"],
+                audience: _config["Jwt:Audience"],
+                claims: claims,
+                expires: DateTime.Now.AddDays(30), 
+                signingCredentials: credentials);
+
+            var jwt = new JwtSecurityTokenHandler().WriteToken(tokenDescriptor);
+
+            return new AuthResponseDto
+            {
+                AccessToken = jwt,
+            };
         }
     }
 }

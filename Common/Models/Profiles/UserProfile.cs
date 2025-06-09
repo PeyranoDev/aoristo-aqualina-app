@@ -1,5 +1,4 @@
 ﻿using AutoMapper;
-using Common.Models;
 using Common.Models.Requests;
 using Common.Models.Responses;
 using Data.Entities;
@@ -15,8 +14,23 @@ public class UserProfile : Profile
                 : new ApartmentInfoDTO
                 {
                     Id = src.Apartment.Id,
-                    Identifier = src.Apartment.Identifier
-                }));
+                    Identifier = src.Apartment.Identifier,
+
+                    Tower = src.Apartment.Tower == null ? null : new TowerForUserResponseDTO
+                    {
+                        Id = src.Apartment.Tower.Id,
+                        Name = src.Apartment.Tower.Name,
+                        Description = src.Apartment.Tower.Description
+                    }
+                }))
+            .ForMember(dest => dest.AssociatedTowers, opt => opt.MapFrom(src =>
+                src.UserTowers.Select(ut => new TowerForUserResponseDTO
+                {
+                    Id = ut.Tower.Id,
+                    Name = ut.Tower.Name,
+                    Description = ut.Tower.Description 
+                }).ToList()
+            ));
 
         CreateMap<UserForCreateDTO, User>()
             .ForMember(dest => dest.PasswordHash, opt => opt.Ignore())
@@ -32,6 +46,5 @@ public class UserProfile : Profile
         .ForAllMembers(opt =>
             opt.Condition((src, dest, srcMember) => srcMember != null))
         ;
-
     }
 }

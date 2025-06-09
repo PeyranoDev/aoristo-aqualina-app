@@ -1,16 +1,19 @@
 ﻿using Common.Models.Requests;
 using Common.Models.Responses;
-using Common.Models.Responses.Common.Models.Responses;
 using Data.Entities;
 using Data.Repositories.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 using Services.Main.Interfaces;
+using System.Collections.Generic;
+using System.Threading.Tasks;
 
 namespace aoristo_aqualina_app.Controllers
 {
     [Route("vehicle")]
     [ApiController]
+    [EnableRateLimiting("ApiPolicy")] 
     public class VehicleController : MainController
     {
         private readonly IVehicleRequestService _vehicleRequestService;
@@ -24,6 +27,7 @@ namespace aoristo_aqualina_app.Controllers
 
         [HttpGet]
         [Authorize]
+        [ResponseCache(Duration = 120, VaryByHeader = "Authorization")] 
         public async Task<IActionResult> GetSelfVehicles()
         {
             var userId = GetUserIdFromToken();
@@ -74,14 +78,16 @@ namespace aoristo_aqualina_app.Controllers
 
         [HttpGet("security/active-requests")]
         [Authorize(Roles = "Admin,Security")]
+        [ResponseCache(Duration = 30)] 
         public async Task<IActionResult> GetVehiclesForSecurity()
         {
             var vehicles = await _vehicleService.GetVehiclesWithActiveRequestsAsync();
             return Ok(ApiResponse<IList<Vehicle>>.Ok(vehicles));
         }
 
-        [HttpGet("/admin/get")]
+        [HttpGet("admin/get")]
         [Authorize(Roles = "Admin")]
+        [ResponseCache(Duration = 300, VaryByQueryKeys = new[] { "*" })] 
         public async Task<IActionResult> GetVehiclesForAdmins([FromQuery] VehicleFilterParams filters, [FromQuery] PaginationParams pagination)
         {
             var pagedResult = await _vehicleService.GetVehiclesPagedAsync(filters, pagination);
