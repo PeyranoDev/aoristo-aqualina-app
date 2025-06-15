@@ -2,6 +2,7 @@
 using Data.Repositories.Interfaces;
 using FirebaseAdmin.Messaging;
 using Services.Main.Interfaces;
+using Services.Providers;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -14,15 +15,18 @@ namespace Services.Main.Implementations
         private readonly IUserRepository _userRepository;
         private readonly ITokenRepository _tokenRepository;
         private readonly IVehicleRepository _vehicleRepository;
+        private readonly FirebaseProvider _firebaseProvider;
 
         public NotificationService(
             IUserRepository userRepository,
             ITokenRepository tokenRepository,
-            IVehicleRepository vehicleRepository)
+            IVehicleRepository vehicleRepository,
+            FirebaseProvider firebaseProvider)
         {
             _userRepository = userRepository;
             _tokenRepository = tokenRepository;
             _vehicleRepository = vehicleRepository;
+            _firebaseProvider = firebaseProvider;
         }
 
         public async Task SendVehiclePreparationNotificationAsync(int vehicleId, int securityUserId)
@@ -89,6 +93,10 @@ namespace Services.Main.Implementations
         #region Private Methods
         private async Task SendNotification(NotificationRequest request)
         {
+            var firebaseApp = await _firebaseProvider.GetAppAsync();
+            if (firebaseApp == null)
+                throw new InvalidOperationException("Firebase app is not initialized.");
+
             var token = await GetValidNotificationToken(request.UserId);
             if (token == null) return;
 
@@ -116,7 +124,7 @@ namespace Services.Main.Implementations
                 message.Data = mutableData;
             }
 
-            await FirebaseMessaging.DefaultInstance.SendAsync(message);
+            await FirebaseMessaging.GetMessaging(firebaseApp).SendAsync(message);
             await UpdateTokenLastUsed(token.Id);
         }
 
