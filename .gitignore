@@ -363,3 +363,4 @@ MigrationBackup/
 FodyWeavers.xsd
 /aoristo-aqualina-app/aqualinaapidb.db
 /aoristo-aqualina-app/appsettings.Development.json
+/aoristo-aqualina-app/aoristo-aqualina-app-LEGACY.csproj
