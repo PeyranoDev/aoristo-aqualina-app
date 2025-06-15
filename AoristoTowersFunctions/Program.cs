@@ -1,5 +1,5 @@
+using AoristoTowersFunctions.Middleware;
 using Azure.Identity;
-using Azure.Security.KeyVault.Secrets;
 using Common.Models.Profiles;
 using Data;
 using Data.Models.Profiles;
@@ -12,43 +12,38 @@ using Microsoft.Extensions.Hosting;
 using Services.Main.Implementations;
 using Services.Main.Interfaces;
 using Services.Providers;
-
-
-// --- Configuración Inicial y Key Vault ---
-var keyVaultUri = new Uri("https://aoristo-key-vault.vault.azure.net/");
-var credential = new DefaultAzureCredential();
-var client = new SecretClient(keyVaultUri, credential);
-
-// Obtenemos los secretos al inicio
-KeyVaultSecret sqlSecret = await client.GetSecretAsync("ConnectionStr");
-KeyVaultSecret jwtSecret = await client.GetSecretAsync("JWTSecret");
-string connectionString = sqlSecret.Value;
+using System;
 
 var host = new HostBuilder()
     .ConfigureAppConfiguration(configBuilder =>
     {
+        var keyVaultUri = new Uri("https://aoristo-key-vault.vault.azure.net/");
+        configBuilder.AddAzureKeyVault(keyVaultUri, new DefaultAzureCredential());
+
         configBuilder.AddJsonFile("local.settings.json", optional: true, reloadOnChange: true)
                      .AddEnvironmentVariables();
     })
     .ConfigureFunctionsWebApplication(worker =>
     {
         worker.UseMiddleware<ExceptionHandlingMiddleware>();
+        worker.UseMiddleware<JwtAuthMiddleware>();
     })
     .ConfigureServices((context, services) =>
     {
         var configuration = context.Configuration;
+
+        var connectionString = configuration["ConnectionStr"];
 
         services.AddDbContextPool<AqualinaAPIContext>(options =>
             options.UseSqlServer(connectionString));
 
         var jwtOptions = new JwtOptions
         {
-            Key = jwtSecret.Value,
+            Key = configuration["JWTSecret"],
             Issuer = configuration["Jwt:Issuer"],
-            Audience = configuration["Jwt:Audience"]
+            Audience = configuration["Jwt:Audience"] 
         };
         services.AddSingleton(jwtOptions);
-        services.AddSingleton(new SecretClient(keyVaultUri, credential));
 
         services.AddSingleton<FirebaseProvider>();
 
@@ -70,12 +65,8 @@ var host = new HostBuilder()
         services.AddScoped<IApartmentService, ApartmentService>();
         services.AddScoped<ITowerRepository, TowerRepository>();
         services.AddScoped<ITowerService, TowerService>();
-
         services.AddSingleton<IBlobStorageService>(sp =>
-        {
-            var storageAccountUri = configuration["Azure:Storage:Blob:ServiceUri"];
-            return new BlobStorageService(storageAccountUri);
-        });
+            new BlobStorageService(configuration["Azure:Storage:Blob:ServiceUri"]!)); 
 
         services.AddAutoMapper(typeof(UserProfile), typeof(VehicleProfile), typeof(TowerProfile));
         services.AddHttpContextAccessor();

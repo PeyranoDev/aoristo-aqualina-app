@@ -1,7 +1,7 @@
-﻿using Azure.Security.KeyVault.Secrets;
-using FirebaseAdmin;
+﻿using FirebaseAdmin;
 using Google.Apis.Auth.OAuth2;
-using System.Threading; // <-- 1. Añadimos el using para SemaphoreSlim
+using Microsoft.Extensions.Configuration;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace Services.Providers
@@ -10,26 +10,28 @@ namespace Services.Providers
     {
         private static FirebaseApp? _firebaseApp;
         private static readonly SemaphoreSlim _semaphore = new SemaphoreSlim(1, 1);
-        private readonly SecretClient _secretClient;
+        private readonly IConfiguration _configuration;
 
-        public FirebaseProvider(SecretClient secretClient)
+        public FirebaseProvider(IConfiguration configuration)
         {
-            _secretClient = secretClient;
+            _configuration = configuration;
         }
 
         public async Task<FirebaseApp> GetAppAsync()
         {
-            if (_firebaseApp != null)
-            {
-                return _firebaseApp;
-            }
+            if (_firebaseApp != null) return _firebaseApp;
+
             await _semaphore.WaitAsync();
             try
             {
                 if (_firebaseApp == null)
                 {
-                    KeyVaultSecret secret = await _secretClient.GetSecretAsync("FirebaseServiceAccount");
-                    string jsonCredentials = secret.Value;
+                    string jsonCredentials = _configuration["FirebaseServiceAccount"];
+
+                    if (string.IsNullOrEmpty(jsonCredentials))
+                    {
+                        throw new System.InvalidOperationException("El secreto 'FirebaseServiceAccount' no se encontró en la configuración.");
+                    }
 
                     _firebaseApp = FirebaseApp.Create(new AppOptions
                     {
