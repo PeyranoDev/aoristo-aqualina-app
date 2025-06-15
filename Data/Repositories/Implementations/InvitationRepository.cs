@@ -1,6 +1,5 @@
 ﻿using Data.Entities;
 using Data.Repositories.Interfaces;
-using Humanizer;
 using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;

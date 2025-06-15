@@ -4,10 +4,6 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 VisualStudioVersion = 17.11.35327.3
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "aoristo-aqualina-app-LEGACY", "aoristo-aqualina-app\aoristo-aqualina-app-LEGACY.csproj", "{A2533043-2B2B-46FA-B163-E696B499703A}"
-	ProjectSection(ProjectDependencies) = postProject
-		{3C970A89-462C-4825-82E5-519B6555A698} = {3C970A89-462C-4825-82E5-519B6555A698}
-		{AB414E14-8527-48E0-8733-C7057F746E05} = {AB414E14-8527-48E0-8733-C7057F746E05}
-	EndProjectSection
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Services", "Services\Services.csproj", "{AB414E14-8527-48E0-8733-C7057F746E05}"
 	ProjectSection(ProjectDependencies) = postProject

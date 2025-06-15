@@ -6,7 +6,6 @@ using Common.Models.Requests;
 using Common.Models.Responses;
 using Data.Entities;
 using Data.Repositories.Interfaces;
-using Humanizer;
 using Microsoft.EntityFrameworkCore;
 using Services.Main.Interfaces;
 using System.ComponentModel.DataAnnotations;
