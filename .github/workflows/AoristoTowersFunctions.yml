@@ -1,55 +1,70 @@
-name: Build and deploy .NET Core application to Function App AoristoTowersFunctions
+name: Build and Deploy .NET Function App
+
 on:
+  # Se activa cada vez que haces un push a la rama 'master'
   push:
     branches:
-    - master
+      - master
+  # También permite la ejecución manual desde la pestaña Actions en GitHub
+  workflow_dispatch:
+
+# Variables de entorno para mantener el código limpio y fácil de mantener
 env:
-  AZURE_FUNCTIONAPP_NAME: AoristoTowersFunctions
-  AZURE_FUNCTIONAPP_PACKAGE_PATH: AoristoTowersFunctions/published
-  CONFIGURATION: Release
-  DOTNET_CORE_VERSION: 8.0.x
-  WORKING_DIRECTORY: AoristoTowersFunctions
-  DOTNET_CORE_VERSION_INPROC: 6.0.x
+  AZURE_FUNCTIONAPP_NAME: 'AoristoTowersFunctions' # El nombre EXACTO de tu Function App en Azure
+  PROJECT_PATH: 'AoristoTowersFunctions' # Ruta a la carpeta de tu proyecto de Functions
+  DOTNET_VERSION: '8.0.x'
+
 jobs:
-  build:
+  build: # Renombrado de 'build_and_test' a solo 'build'
     runs-on: ubuntu-latest
+    
     steps:
-    - uses: actions/checkout@v4
-    - name: Setup .NET SDK
-      uses: actions/setup-dotnet@v4
-      with:
-        dotnet-version: ${{ env.DOTNET_CORE_VERSION }}
-    - name: Setup .NET Core (for inproc extensions)
-      uses: actions/setup-dotnet@v4
-      with:
-        dotnet-version: ${{ env.DOTNET_CORE_VERSION_INPROC }}
-        dotnet-quality: preview
-    - name: Restore
-      run: dotnet restore "${{ env.WORKING_DIRECTORY }}"
-    - name: Build
-      run: dotnet build "${{ env.WORKING_DIRECTORY }}" --configuration ${{ env.CONFIGURATION }} --no-restore
-    - name: Publish
-      run: dotnet publish "${{ env.WORKING_DIRECTORY }}" --configuration ${{ env.CONFIGURATION }} --no-build --output "${{ env.AZURE_FUNCTIONAPP_PACKAGE_PATH }}"
-    - name: Publish Artifacts
-      uses: actions/upload-artifact@v4
-      with:
-        name: functionapp
-        path: ${{ env.AZURE_FUNCTIONAPP_PACKAGE_PATH }}
+      - name: 'Checkout GitHub Action'
+        uses: actions/checkout@v4
+
+      - name: 'Setup .NET SDK'
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: ${{ env.DOTNET_VERSION }}
+
+      - name: 'Restore NuGet packages for the entire solution'
+        run: dotnet restore
+
+      - name: 'Build the entire solution'
+        run: dotnet build --configuration Release --no-restore
+
+      # --- El paso de ejecutar pruebas ha sido eliminado ---
+
+      - name: 'Publish the Function App project'
+        run: dotnet publish ${{ env.PROJECT_PATH }} --configuration Release --no-build --output ./publish
+
+      - name: 'Upload artifact for deployment job'
+        uses: actions/upload-artifact@v4
+        with:
+          name: .net-app
+          path: ./publish
+
   deploy:
     runs-on: ubuntu-latest
-    needs: build
+    needs: build # Depende solo de que la compilación sea exitosa
+    environment:
+      name: 'Production'
+      url: ${{ steps.deploy.outputs.webapp-url }}
+    
     steps:
-    - name: Download artifact from build job
-      uses: actions/download-artifact@v4
-      with:
-        name: functionapp
-        path: ${{ env.AZURE_FUNCTIONAPP_PACKAGE_PATH }}
-    - name: Azure Login
-      uses: azure/login@v2
-      with:
-        creds: ${{ secrets.AoristoTowersFunctions_SPN }}
-    - name: Deploy to Azure Function App
-      uses: Azure/functions-action@v1
-      with:
-        app-name: ${{ env.AZURE_FUNCTIONAPP_NAME }}
-        package: ${{ env.AZURE_FUNCTIONAPP_PACKAGE_PATH }}
+      - name: 'Download artifact from build job'
+        uses: actions/download-artifact@v4
+        with:
+          name: .net-app
+      
+      - name: 'Azure Login'
+        uses: azure/login@v2
+        with:
+          creds: ${{ secrets.AoristoTowersFunctions_SPN }}
+      
+      - name: 'Deploy to Azure Functions'
+        id: deploy
+        uses: azure/functions-action@v1
+        with:
+          app-name: ${{ env.AZURE_FUNCTIONAPP_NAME }}
+          package: '.' # El punto indica que se debe usar el contenido de la carpeta actual.
