@@ -1,15 +1,14 @@
 ﻿using AoristoTowersFunctions.Helpers;
-using Common.Models.Responses;
 using Microsoft.Azure.Functions.Worker;
+using Microsoft.Azure.Functions.Worker.Http;
 using Microsoft.Azure.Functions.Worker.Middleware;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.IdentityModel.Tokens;
 using System;
-using System.Collections.Generic;
-using System.IdentityModel.Tokens.Jwt;
 using System.Linq;
 using System.Net;
+using System.Reflection; 
 using System.Security.Claims;
 using System.Text;
 using System.Threading.Tasks;
@@ -18,32 +17,34 @@ namespace AoristoTowersFunctions.Middleware
 {
     /// <summary>
     /// Atributo personalizado para decorar las funciones que requieren autorización.
-    /// Funciona en conjunto con JwtAuthMiddleware.
+    /// Funciona en conjunto con AuthorizationMiddleware.
     /// </summary>
     [AttributeUsage(AttributeTargets.Method, Inherited = false, AllowMultiple = true)]
     public sealed class AuthorizeAttribute : Attribute
     {
-        /// <summary>
-        /// Una lista de roles separados por comas (ej. "Admin,Security") que están permitidos.
-        /// Si se deja vacío, solo requiere un token válido sin importar el rol.
-        /// </summary>
         public string? Roles { get; set; }
     }
 
     /// <summary>
-    /// Middleware que intercepta las peticiones HTTP, valida el token JWT y verifica los roles.
+    /// Middleware que intercepta, valida el token JWT (autenticación) y verifica
+    /// los roles del usuario contra los requeridos por la función (autorización).
     /// </summary>
-    public class JwtAuthMiddleware : IFunctionsWorkerMiddleware
+    public class AuthorizationMiddleware : IFunctionsWorkerMiddleware
     {
+        private readonly ILogger<AuthorizationMiddleware> _logger;
+
+        public AuthorizationMiddleware(ILogger<AuthorizationMiddleware> logger)
+        {
+            _logger = logger;
+        }
+
         public async Task Invoke(FunctionContext context, FunctionExecutionDelegate next)
         {
-            var authorizeAttribute = context.FunctionDefinition.InputBindings
-                .Where(binding => binding.Value.Type == "AuthorizeAttribute")
-                .Select(binding => binding.Value)
-                .OfType<AuthorizeAttribute>()
-                .FirstOrDefault();
+            // --- CORRECCIÓN CLAVE: Usamos Reflexión para obtener el atributo ---
+            var targetMethod = GetTargetFunctionMethod(context);
+            var authorizeAttribute = targetMethod?.GetCustomAttribute<AuthorizeAttribute>();
 
-            // Si la función no tiene el atributo, no requiere autorización, así que continuamos.
+            // Si la función no está decorada con nuestro atributo, no requiere autorización.
             if (authorizeAttribute == null)
             {
                 await next(context);
@@ -57,26 +58,22 @@ namespace AoristoTowersFunctions.Middleware
                 return;
             }
 
-            // Intenta obtener el token del header "Authorization".
             if (!request.Headers.TryGetValues("Authorization", out var authHeaderValues) ||
                 !authHeaderValues.Any() ||
                 !authHeaderValues.First().StartsWith("Bearer ", StringComparison.OrdinalIgnoreCase))
             {
-                // Si no hay token, la petición no está autorizada.
-                await context.SetHttpResponse(request, HttpStatusCode.Unauthorized);
+                await SetErrorResponse(request, HttpStatusCode.Unauthorized, "Authorization header missing or invalid.");
                 return;
             }
 
             var token = authHeaderValues.First().Substring("Bearer ".Length).Trim();
             var jwtOptions = context.InstanceServices.GetRequiredService<JwtOptions>();
-            var logger = context.GetLogger<JwtAuthMiddleware>();
 
             try
             {
                 var tokenHandler = new System.IdentityModel.Tokens.Jwt.JwtSecurityTokenHandler();
                 var key = Encoding.ASCII.GetBytes(jwtOptions.Key);
 
-                // Valida el token. Si algo falla (firma, expiración, etc.), lanzará una excepción.
                 var claimsPrincipal = tokenHandler.ValidateToken(token, new TokenValidationParameters
                 {
                     ValidateIssuerSigningKey = true,
@@ -85,35 +82,56 @@ namespace AoristoTowersFunctions.Middleware
                     ValidIssuer = jwtOptions.Issuer,
                     ValidateAudience = true,
                     ValidAudience = jwtOptions.Audience,
-                    ClockSkew = TimeSpan.Zero // No permite tolerancia en la expiración.
+                    ClockSkew = TimeSpan.Zero
                 }, out SecurityToken validatedToken);
 
-                // Verificamos si la función requiere roles específicos.
                 if (!string.IsNullOrEmpty(authorizeAttribute.Roles))
                 {
-                    var requiredRoles = authorizeAttribute.Roles.Split(',').Select(r => r.Trim().ToLowerInvariant()).ToList();
-                    var userHasRole = requiredRoles.Any(role => claimsPrincipal.IsInRole(role.ToLowerInvariant()));
-
-                    if (!userHasRole)
+                    var requiredRoles = authorizeAttribute.Roles.Split(',').Select(r => r.Trim());
+                    if (!requiredRoles.Any(role => claimsPrincipal.IsInRole(role)))
                     {
-                        logger.LogWarning("Acceso denegado por rol. Usuario: {User}, Roles requeridos: {Roles}", claimsPrincipal.Identity?.Name, authorizeAttribute.Roles);
-                        await context.SetHttpResponse(request, HttpStatusCode.Forbidden, ApiResponse<object>.Fail("Access denied. Insufficient permissions."));
+                        await SetErrorResponse(request, HttpStatusCode.Forbidden, "Access denied. Insufficient permissions.");
                         return;
                     }
                 }
 
-                // ¡Éxito! El usuario está autenticado y tiene los roles necesarios.
-                // Guardamos el ClaimsPrincipal en el contexto para que la función pueda usarlo.
                 context.Features.Set(claimsPrincipal);
-
                 await next(context);
             }
             catch (Exception ex)
             {
-                // Si la validación del token falla por cualquier motivo.
-                logger.LogWarning(ex, "Validación de token JWT fallida.");
-                await context.SetHttpResponse(request, HttpStatusCode.Unauthorized, ApiResponse<object>.Unauthorized("Invalid token."));
+                _logger.LogWarning(ex, "Token validation failed.");
+                await SetErrorResponse(request, HttpStatusCode.Unauthorized, "Invalid token.");
             }
+        }
+
+        /// <summary>
+        /// Usa reflexión para obtener la información del método (MethodInfo) de la función que se está ejecutando.
+        /// </summary>
+        private MethodInfo? GetTargetFunctionMethod(FunctionContext context)
+        {
+            // El EntryPoint contiene el nombre completo del método, ej: "MiNamespace.MiClase.MiMetodo"
+            var entryPoint = context.FunctionDefinition.EntryPoint;
+            if (string.IsNullOrEmpty(entryPoint)) return null;
+
+            // Cargamos el ensamblado que contiene la función
+            var assemblyPath = context.FunctionDefinition.PathToAssembly;
+            var assembly = Assembly.LoadFrom(assemblyPath);
+
+            // Separamos el nombre de la clase del nombre del método
+            var typeName = entryPoint.Substring(0, entryPoint.LastIndexOf('.'));
+            var methodName = entryPoint.Substring(entryPoint.LastIndexOf('.') + 1);
+
+            var type = assembly.GetType(typeName);
+            return type?.GetMethod(methodName);
+        }
+
+        private async Task SetErrorResponse(HttpRequestData request, HttpStatusCode statusCode, string message)
+        {
+            var response = request.CreateResponse(statusCode);
+            // Es buena práctica devolver un cuerpo JSON incluso para errores.
+            await response.WriteAsJsonAsync(new { message });
+            request.FunctionContext.GetInvocationResult().Value = response;
         }
     }
 }

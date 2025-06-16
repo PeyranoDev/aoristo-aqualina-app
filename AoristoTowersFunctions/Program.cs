@@ -26,7 +26,7 @@ var host = new HostBuilder()
     .ConfigureFunctionsWebApplication(worker =>
     {
         worker.UseMiddleware<ExceptionHandlingMiddleware>();
-        worker.UseMiddleware<JwtAuthMiddleware>();
+        worker.UseMiddleware<AuthorizationMiddleware>();
     })
     .ConfigureServices((context, services) =>
     {
@@ -44,6 +44,8 @@ var host = new HostBuilder()
             Audience = configuration["Jwt:Audience"] 
         };
         services.AddSingleton(jwtOptions);
+
+
 
         services.AddSingleton<FirebaseProvider>();
 
