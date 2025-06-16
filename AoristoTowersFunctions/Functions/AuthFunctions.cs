@@ -36,23 +36,26 @@ namespace AoristoTowersFunctions.Functions
         public async Task<HttpResponseData> Login(
             [HttpTrigger(AuthorizationLevel.Anonymous, "post", Route = "auth/login")] HttpRequestData req)
         {
-            _logger.LogInformation("Login function processed a request.");
-
             var credentials = await req.ReadFromJsonAsync<CredentialsDTO>();
+
             if (credentials == null)
             {
-                return await req.CreateJsonResponse(HttpStatusCode.BadRequest, ApiResponse<object>.Fail("Invalid request body."));
+                return await req.CreateJsonResponse(HttpStatusCode.BadRequest,
+                    ApiResponse<object>.Fail("Invalid request body."));
             }
 
             User? user = await _userService.ValidateAsync(credentials);
 
-            if (user is null || !user.GetAssociatedTowerIds().Contains(credentials.SelectedTowerId))
+            if (user is null ||
+                !user.GetAssociatedTowerIds().Contains(credentials.SelectedTowerId))
             {
-                return await req.CreateJsonResponse(HttpStatusCode.Forbidden, ApiResponse<object>.Fail("Invalid credentials or tower access."));
+                return await req.CreateJsonResponse(HttpStatusCode.Forbidden,
+                    ApiResponse<object>.Fail("Invalid credentials or tower access."));
             }
 
             var authResponse = GenerateJwt(user, credentials.SelectedTowerId);
-            return await req.CreateJsonResponse(HttpStatusCode.OK, ApiResponse<AuthResponseDto>.Ok(authResponse, "Login successful."));
+            return await req.CreateJsonResponse(HttpStatusCode.OK,
+                ApiResponse<AuthResponseDto>.Ok(authResponse, "Login successful."));
         }
 
         [Function("Register")]

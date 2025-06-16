@@ -72,7 +72,6 @@ namespace AoristoTowersFunctions.Helpers
         public static async Task<HttpResponseData> CreateJsonResponse<T>(this HttpRequestData req, HttpStatusCode status, ApiResponse<T> body)
         {
             var response = req.CreateResponse(status);
-            response.Headers.Add("Content-Type", "application/json; charset=utf-8");
             await response.WriteAsJsonAsync(body, cancellationToken: default); 
             return response;
         }

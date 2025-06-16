@@ -9,6 +9,7 @@
 
 	<ItemGroup>
 		<!-- Core de Azure Functions (Worker Aislado para ASP.NET Core) -->
+		<PackageReference Include="AutoMapper" Version="14.0.0" />
 		<PackageReference Include="Azure.Extensions.AspNetCore.Configuration.Secrets" Version="1.4.0" />
 		<PackageReference Include="Microsoft.Azure.Functions.Worker" Version="1.22.0" />
 		<PackageReference Include="Microsoft.Azure.Functions.Worker.Sdk" Version="1.17.2" />
@@ -27,9 +28,12 @@
 			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
 		</PackageReference>
 
+		<PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="8.0.6" />
+		<PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="7.6.0" />
+		<PackageReference Include="Microsoft.IdentityModel.Tokens" Version="8.12.0" />
+
 		<!-- Lógica de Negocio y Autenticación -->
 		<PackageReference Include="FirebaseAdmin" Version="3.2.0" />
-		<PackageReference Include="AutoMapper" Version="14.0.0" />
 		<PackageReference Include="BCrypt.Net-Next" Version="4.0.3" />
 
 		<!-- Logging y Utilidades -->
