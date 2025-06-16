@@ -72,7 +72,10 @@ namespace AoristoTowersFunctions.Helpers
         public static async Task<HttpResponseData> CreateJsonResponse<T>(this HttpRequestData req, HttpStatusCode status, ApiResponse<T> body)
         {
             var response = req.CreateResponse(status);
+            if (response.Headers.Contains("Content-Type"))
+                response.Headers.Remove("Content-Type");
             response.Headers.Add("Content-Type", "application/json; charset=utf-8");
+
             var jsonString = JsonSerializer.Serialize(body, new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.CamelCase });
             await response.WriteStringAsync(jsonString);
 
