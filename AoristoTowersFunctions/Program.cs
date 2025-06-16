@@ -23,7 +23,7 @@ var host = new HostBuilder()
         configBuilder.AddJsonFile("local.settings.json", optional: true, reloadOnChange: true)
                      .AddEnvironmentVariables();
     })
-    .ConfigureFunctionsWorkerDefaults(worker =>
+    .ConfigureFunctionsWebApplication(worker =>
     {
         worker.UseMiddleware<ExceptionHandlingMiddleware>();
         worker.UseMiddleware<JwtAuthMiddleware>();
