@@ -23,10 +23,10 @@ var host = new HostBuilder()
         configBuilder.AddJsonFile("local.settings.json", optional: true, reloadOnChange: true)
                      .AddEnvironmentVariables();
     })
-    .ConfigureFunctionsWebApplication(worker =>
+    .ConfigureFunctionsWorkerDefaults(worker =>
     {
         worker.UseMiddleware<ExceptionHandlingMiddleware>();
-        worker.UseMiddleware<JwtAuthMiddleware>();
+        worker.UseMiddleware<AuthorizationMiddleware>();
     })
     .ConfigureServices((context, services) =>
     {
@@ -44,6 +44,8 @@ var host = new HostBuilder()
             Audience = configuration["Jwt:Audience"] 
         };
         services.AddSingleton(jwtOptions);
+
+
 
         services.AddSingleton<FirebaseProvider>();
 
