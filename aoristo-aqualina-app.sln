@@ -3,8 +3,6 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.11.35327.3
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "aoristo-aqualina-app-LEGACY", "aoristo-aqualina-app\aoristo-aqualina-app-LEGACY.csproj", "{A2533043-2B2B-46FA-B163-E696B499703A}"
-EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Services", "Services\Services.csproj", "{AB414E14-8527-48E0-8733-C7057F746E05}"
 	ProjectSection(ProjectDependencies) = postProject
 		{3C970A89-462C-4825-82E5-519B6555A698} = {3C970A89-462C-4825-82E5-519B6555A698}
@@ -25,9 +23,6 @@ Global
 		Release|Any CPU = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{A2533043-2B2B-46FA-B163-E696B499703A}.Debug|Any CPU.ActiveCfg = Release|Any CPU
-		{A2533043-2B2B-46FA-B163-E696B499703A}.Debug|Any CPU.Build.0 = Release|Any CPU
-		{A2533043-2B2B-46FA-B163-E696B499703A}.Release|Any CPU.ActiveCfg = Debug|Any CPU
 		{AB414E14-8527-48E0-8733-C7057F746E05}.Debug|Any CPU.ActiveCfg = Release|Any CPU
 		{AB414E14-8527-48E0-8733-C7057F746E05}.Debug|Any CPU.Build.0 = Release|Any CPU
 		{AB414E14-8527-48E0-8733-C7057F746E05}.Release|Any CPU.ActiveCfg = Release|Any CPU

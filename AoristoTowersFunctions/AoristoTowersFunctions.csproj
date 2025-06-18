@@ -11,9 +11,9 @@
 		<!-- Core de Azure Functions (Worker Aislado para ASP.NET Core) -->
 		<PackageReference Include="AutoMapper" Version="14.0.0" />
 		<PackageReference Include="Azure.Extensions.AspNetCore.Configuration.Secrets" Version="1.4.0" />
-		<PackageReference Include="Microsoft.Azure.Functions.Worker" Version="1.22.0" />
-		<PackageReference Include="Microsoft.Azure.Functions.Worker.Sdk" Version="1.17.2" />
-		<PackageReference Include="Microsoft.Azure.Functions.Worker.Extensions.Http.AspNetCore" Version="1.3.0" />
+		<PackageReference Include="Microsoft.Azure.Functions.Worker" Version="2.0.0" />
+		<PackageReference Include="Microsoft.Azure.Functions.Worker.Sdk" Version="2.0.4" />
+		<PackageReference Include="Microsoft.Azure.Functions.Worker.Extensions.Http.AspNetCore" Version="2.0.2" />
 		<PackageReference Include="Microsoft.Azure.Functions.Worker.Extensions.Timer" Version="4.3.1" />
 
 		<!-- Conectividad y Servicios Azure (Usando la versión más alta requerida por tus proyectos) -->
@@ -28,8 +28,8 @@
 			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
 		</PackageReference>
 
-		<PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="8.0.6" />
-		<PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="7.6.0" />
+		<PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="9.0.6" />
+		<PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="8.12.1" />
 		<PackageReference Include="Microsoft.IdentityModel.Tokens" Version="8.12.1" />
 
 		<!-- Lógica de Negocio y Autenticación -->
@@ -37,8 +37,8 @@
 		<PackageReference Include="BCrypt.Net-Next" Version="4.0.3" />
 
 		<!-- Logging y Utilidades -->
-		<PackageReference Include="Microsoft.Extensions.Hosting" Version="8.0.0" />
-		<PackageReference Include="Microsoft.Azure.Functions.Worker.ApplicationInsights" Version="1.2.0" />
+		<PackageReference Include="Microsoft.Extensions.Hosting" Version="9.0.6" />
+		<PackageReference Include="Microsoft.Azure.Functions.Worker.ApplicationInsights" Version="2.0.0" />
 	</ItemGroup>
 
 	<!-- Tus referencias a los otros proyectos (esto estaba correcto) -->
