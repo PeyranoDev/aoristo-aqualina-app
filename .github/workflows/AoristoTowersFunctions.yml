@@ -9,7 +9,7 @@ on:
 env:
   AZURE_FUNCTIONAPP_NAME: 'AoristoTowersFunctions' # El nombre EXACTO de tu Function App en Azure
   PROJECT_PATH: 'AoristoTowersFunctions/AoristoTowersFunctions.csproj' # Ruta directa al archivo de proyecto
-  DOTNET_VERSION: '8.0.x'
+  DOTNET_VERSION: '9.0.x'
 
 jobs:
   build-and-deploy:
