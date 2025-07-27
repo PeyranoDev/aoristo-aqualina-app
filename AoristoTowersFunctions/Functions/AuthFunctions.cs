@@ -54,6 +54,25 @@ namespace AoristoTowersFunctions.Functions
             }
 
             var authResponse = GenerateJwt(user, credentials.SelectedTowerId);
+
+            if (authResponse == null)
+                        {
+                            return await req.CreateJsonResponse(HttpStatusCode.InternalServerError,
+                                ApiResponse<object>.Fail("Failed to generate JWT token."));
+                        }
+
+            authResponse.User = new UserForResponse
+            {
+                Id = user.Id,
+                Email = user.Email,
+                Username = user.Username,
+                Name = user.Name,
+                Surname = user.Surname,
+                Role = user.Role.Type.ToString(),
+                Phone = user.Phone
+            };
+
+
             return await req.CreateJsonResponse(HttpStatusCode.OK,
                 ApiResponse<AuthResponseDto>.Ok(authResponse, "Login successful."));
         }
@@ -80,8 +99,6 @@ namespace AoristoTowersFunctions.Functions
             var claims = new List<Claim>
             {
                 new(ClaimTypes.NameIdentifier, user.Id.ToString()),
-                new("username", user.Username),
-                new("fullName", $"{user.Name} {user.Surname}"),
                 new(ClaimTypes.Role, user.Role.Type.ToString()),
                 new("towerId", selectedTowerId.ToString())
             };

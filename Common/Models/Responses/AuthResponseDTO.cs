@@ -10,5 +10,6 @@ namespace Common.Models.Responses
     public class AuthResponseDto
     {
         public string AccessToken { get; set; }
+        public UserForResponse User { get; set; }
     }
 }
