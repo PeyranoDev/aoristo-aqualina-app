@@ -5,9 +5,9 @@ using Microsoft.Azure.Functions.Worker.Http;
 using Microsoft.Azure.Functions.Worker.Middleware;
 using Microsoft.Extensions.Logging;
 using System;
-using System.Linq; // Necesario para .Any() en AggregateException
+using System.Linq; 
 using System.Net;
-using System.Text.Json; // Necesario para JsonException
+using System.Text.Json; 
 using System.Threading.Tasks;
 
 public class ExceptionHandlingMiddleware : IFunctionsWorkerMiddleware

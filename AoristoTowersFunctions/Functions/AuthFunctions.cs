@@ -115,5 +115,7 @@ namespace AoristoTowersFunctions.Functions
             var jwt = new JwtSecurityTokenHandler().WriteToken(tokenDescriptor);
             return new AuthResponseDto { AccessToken = jwt };
         }
+
+
     }
 }

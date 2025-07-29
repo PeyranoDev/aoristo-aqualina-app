@@ -104,14 +104,7 @@ namespace AoristoTowersFunctions.Functions
 
             var pagedResult = await _userService.GetUsersPagedAsync(filters, pagination);
 
-            var response = req.CreateResponse(HttpStatusCode.OK);
-            response.Headers.Add("Content-Type", "application/json");
-
-            var json = System.Text.Json.JsonSerializer.Serialize(ApiResponse<PagedResponse<UserForResponse>>.Ok(pagedResult));
-
-            response.WriteString(json);
-
-            return response;
+            return await req.CreateJsonResponse(HttpStatusCode.OK, ApiResponse<PagedResponse<UserForResponse>>.Ok(pagedResult));
         }
 
         [Function("DeleteCurrentUser")]

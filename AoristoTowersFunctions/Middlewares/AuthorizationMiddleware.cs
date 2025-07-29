@@ -131,7 +131,10 @@ namespace AoristoTowersFunctions.Middleware
             var response = request.CreateResponse(statusCode);
             // Es buena práctica devolver un cuerpo JSON incluso para errores.
             await response.WriteAsJsonAsync(new { message });
+
+            // Esta es la línea que falta y que es crucial:
             request.FunctionContext.GetInvocationResult().Value = response;
         }
+    }
     }
 }
