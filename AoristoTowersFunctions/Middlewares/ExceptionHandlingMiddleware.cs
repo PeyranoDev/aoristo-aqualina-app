@@ -1,4 +1,5 @@
-﻿using Common.Exceptions;
+﻿using AoristoTowersFunctions.Helpers;
+using Common.Exceptions;
 using Common.Models.Responses;
 using Microsoft.Azure.Functions.Worker;
 using Microsoft.Azure.Functions.Worker.Http;
@@ -54,11 +55,11 @@ public class ExceptionHandlingMiddleware : IFunctionsWorkerMiddleware
         }
         else if (innerException is JsonException)
         {
-            statusCode = HttpStatusCode.BadRequest; 
+            statusCode = HttpStatusCode.BadRequest;
             errorMessage = "El cuerpo de la solicitud no tiene un formato JSON válido.";
             _logger.LogWarning("Error de formato JSON: {Message}", innerException.Message);
         }
-        else if (innerException is ArgumentException) 
+        else if (innerException is ArgumentException)
         {
             statusCode = HttpStatusCode.BadRequest;
             errorMessage = "Argumento(s) inválido(s) en la solicitud.";
@@ -67,10 +68,7 @@ public class ExceptionHandlingMiddleware : IFunctionsWorkerMiddleware
 
         var apiResponse = ApiResponse<object>.Fail(errorMessage);
 
-        var response = httpRequest.CreateResponse(statusCode);
-        if (response.Headers.Contains("Content-Type"))
-            response.Headers.Remove("Content-Type");
-        await response.WriteAsJsonAsync(apiResponse);
+        var response = await httpRequest.CreateJsonResponse(statusCode, apiResponse);
 
         var invocationResult = context.GetInvocationResult();
         invocationResult.Value = response;

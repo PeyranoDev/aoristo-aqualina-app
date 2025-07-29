@@ -1,4 +1,5 @@
 ﻿using AoristoTowersFunctions.Helpers;
+using Common.Models.Responses;
 using Microsoft.Azure.Functions.Worker;
 using Microsoft.Azure.Functions.Worker.Http;
 using Microsoft.Azure.Functions.Worker.Middleware;
@@ -128,13 +129,9 @@ namespace AoristoTowersFunctions.Middleware
 
         private async Task SetErrorResponse(HttpRequestData request, HttpStatusCode statusCode, string message)
         {
-            var response = request.CreateResponse(statusCode);
-            // Es buena práctica devolver un cuerpo JSON incluso para errores.
-            await response.WriteAsJsonAsync(new { message });
-
-            // Esta es la línea que falta y que es crucial:
+            // Usamos el helper CreateJsonResponse que es seguro y consistente
+            var response = await request.CreateJsonResponse(statusCode, ApiResponse<object>.Fail(message));
             request.FunctionContext.GetInvocationResult().Value = response;
         }
-    }
     }
 }
